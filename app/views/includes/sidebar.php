@@ -1,0 +1,71 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+
+$role = $_SESSION['role'] ?? 'guest';
+?>
+
+<div class="min-height-300 bg-gradient position-absolute w-100" style="background-color: #5AB2FF;"></div>
+<aside class="sidenav bg-white navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4 " id="sidenav-main">
+  <div class="sidenav-header">
+    <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+    <a class="navbar-brand m-0" href="<?= BASE_URL ?>/dashboard">
+      <img src="<?= BASE_URL ?>/assets/img/logo-ct-dark.png" width="26px" height="26px" class="navbar-brand-img h-100" alt="main_logo">
+      <span class="ms font-weight-bold">Lab Dashboard</span>
+    </a>
+  </div>
+  <hr class="horizontal dark mt-0">
+  <div class="navbar-collapse w-auto h-auto" id="sidenav-collapse-main">
+    <ul class="navbar-nav">
+
+      <!-- MENU UTAMA -->
+      <li class="nav-item">
+        <a class="nav-link" href="<?= BASE_URL ?>/dashboard">
+          <i class="ni ni-tv-2 text-dark text-sm opacity-10"></i>
+          <span class="nav-link-text">Dashboard</span>
+        </a>
+      </li>
+
+      <?php if ($role === 'kepala'): ?>
+        <!-- MENU KHUSUS KEPALA LAB -->
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/users"><i class="ni ni-single-02"></i> Manajemen Users</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/inventori"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
+
+      <?php elseif ($role === 'dosen'): ?>
+        <!-- MENU KHUSUS DOSEN -->
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Mahasiswa Bimbingan</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+
+      <?php elseif ($role === 'mahasiswa'): ?>
+        <!-- MENU KHUSUS MAHASISWA -->
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi Saya</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Bimbingan</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+      <?php endif; ?>
+
+      <!-- MENU AKUN -->
+      <li class="nav-item mt-3">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account</h6>
+      </li>
+      <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/profile"><i class="ni ni-circle-08"></i> Profile</a></li>
+      <li id="logout" class="nav-item"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout"><i class="ni ni-user-run"></i> Logout</a></li>
+      <script>
+        const logout = document.querySelector('#logout');
+        logout.addEventListener('click', function() {
+          const confirmLogout = confirm('Apakah Anda yakin ingin logout?');
+          if (confirmLogout) {
+            window.location.href = '<?= BASE_URL ?>/logout';
+          }
+        });
+      </script>
+    </ul>
+  </div>
+</aside>
