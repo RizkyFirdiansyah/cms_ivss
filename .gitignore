@@ -1,0 +1,5 @@
+# Ignore file config
+app/config/config.php
+
+# Ignore folder assets
+public/assets/
