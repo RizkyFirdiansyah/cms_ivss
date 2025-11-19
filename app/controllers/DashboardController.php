@@ -5,7 +5,8 @@ class DashboardController extends BaseController
 {
   public function __construct()
   {
-    parent::__construct(); // ✅ Penting: jalankan inisialisasi dari BaseController
+    // Inisialisasi BaseController
+    parent::__construct();
     parent::requireLogin();
   }
 
@@ -14,7 +15,6 @@ class DashboardController extends BaseController
     $page_title = 'Dashboard';
     $page_breadcrumb = ['Pages', 'Dashboard'];
 
-    // ✅ Sekarang data user bisa diakses langsung
     $user = $this->user;
 
     include '../app/views/dashboard.php';

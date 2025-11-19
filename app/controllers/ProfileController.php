@@ -43,8 +43,6 @@ class ProfileController extends BaseController
   public function update()
   {
     // Set JSON
-    header('Content-Type: application/json');
-
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
       exit;
     }
@@ -67,7 +65,7 @@ class ProfileController extends BaseController
       $photo_path = $this->handleFileUpload($_FILES['photo']);
 
       if ($photo_path === false) {
-        echo json_encode([
+        $this->jsonResponse([
           'success' => false,
           'message' => 'Upload foto gagal atau format tidak sesuai.'
         ]);
@@ -87,7 +85,7 @@ class ProfileController extends BaseController
         $this->deleteFileFromServer($old_photo_or_success);
       }
 
-      echo json_encode([
+      $this->jsonResponse([
         'success' => true,
         'message' => 'Profil berhasil diperbarui.'
       ]);
@@ -96,26 +94,23 @@ class ProfileController extends BaseController
         $this->deleteFileFromServer($basic_data['photo']);
       }
 
-      echo json_encode([
+      $this->jsonResponse([
         'success' => false,
         'message' => 'Gagal memperbarui profil. Cek log error.'
       ]);
     }
-
     exit;
   }
 
   // Update FORM SOSMED
   public function update_sosmed()
   {
-    header('Content-Type: application/json');
-
     $old = $_POST['social_media'] ?? [];
     $new = $_POST['social_media_new'] ?? [];
 
     if (empty($old) && empty($new)) {
-      echo json_encode([
-        'success' => true,
+      $this->jsonResponse([
+        'success' => false,
         'message' => 'Tidak ada perubahan.'
       ]);
       exit;
@@ -128,7 +123,7 @@ class ProfileController extends BaseController
         $new
       );
 
-      echo json_encode([
+      $this->jsonResponse([
         'success' => $ok,
         'message' => $ok
           ? 'Media sosial berhasil diperbarui.'
@@ -136,7 +131,7 @@ class ProfileController extends BaseController
       ]);
       exit;
     } catch (Exception $e) {
-      echo json_encode([
+      $this->jsonResponse([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage()
       ]);
@@ -147,8 +142,6 @@ class ProfileController extends BaseController
   // Update FORM LIST DINAMIS
   public function update_list()
   {
-    header('Content-Type: application/json');
-
     $post_data = $_POST;
     $list_type = $post_data['list_type'] ?? null;
 
@@ -158,24 +151,24 @@ class ProfileController extends BaseController
         $success = $this->profileModel->updateDynamicLists($this->id_user, $list_type, $post_data);
 
         if ($success) {
-          echo json_encode([
+          $this->jsonResponse([
             'success' => true,
             'message' => 'Data list dinamis berhasil diperbarui.'
           ]);
         } else {
-          echo json_encode([
+          $this->jsonResponse([
             'success' => false,
             'message' => 'Gagal memperbarui data list dinamis (Unknown Error).'
           ]);
         }
       } else {
-        echo json_encode([
+        $this->jsonResponse([
           'success' => false,
           'message' => 'Tipe data list tidak valid.'
         ]);
       }
     } catch (Exception $e) {
-      echo json_encode([
+      $this->jsonResponse([
         'success' => false,
         'message' => 'TERJADI Kesalahan Kritis: ' . $e->getMessage()
       ]);
