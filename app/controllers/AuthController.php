@@ -37,7 +37,7 @@ class AuthController extends BaseController
       $_SESSION['email'] = $user['email'];
       $_SESSION['role'] = $user['role'];
 
-      // Set cookie opsional (7 hari)
+      // Set cookie (7 hari)
       setcookie('email', $user['email'], time() + (86400 * 7), "/");
 
       $this->redirectTo('dashboard');
