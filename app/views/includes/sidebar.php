@@ -30,7 +30,7 @@ $role = $_SESSION['role'] ?? 'guest';
       <?php if ($role === 'kepala'): ?>
         <!-- MENU KHUSUS KEPALA LAB -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/users"><i class="ni ni-single-02"></i> Manajemen Users</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/inventori"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
