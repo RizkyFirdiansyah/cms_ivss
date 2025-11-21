@@ -13,7 +13,7 @@
     <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-icons.css" rel="stylesheet" />
     <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/4da45c7bdd.js" crossorigin="anonymous"></script> <!-- Font Awesome itT -->
-    <link id="pagestyle" href="/mvc-pbl/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
+    <link id="pagestyle" href="/cms_ivss/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
 </head>
 
 <body class="g-sidenav-show bg-gray-100">
@@ -23,12 +23,6 @@
     <main class="main-content position-relative border-radius-lg ">
 
         <?php include('includes/navbar.php') ?> <!-- Navbar -->
-
-        <?php
-        // $profile = $data['user'] ?? [];
-        // var_dump($user['photo']);
-        ?>
-
 
         <!-- Profile -->
         <div class="container-fluid py-4">
@@ -112,7 +106,7 @@
                                                     <li class="list-group-item border-0 ps-0 text-sm">
                                                         <strong><?= htmlspecialchars($p['level'] ?? '-') ?></strong> -
                                                         <?= htmlspecialchars($p['major'] ?? '-') ?> (<?= htmlspecialchars($p['graduation_year'] ?? '-') ?>)
-                                                        <br><small class="text-muted"><?= htmlspecialchars($p['institution_name'] ?? '-') ?></small>
+                                                        <br><?= htmlspecialchars($p['institution_name'] ?? '-') ?>
                                                     </li>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
@@ -128,7 +122,7 @@
                                                     <li class="list-group-item border-0 ps-0 text-sm">
                                                         <strong><?= htmlspecialchars($s['name'] ?? '-') ?></strong>
                                                         (<?= htmlspecialchars($s['issue_year'] ?? '-') ?>)
-                                                        <br><small class="text-muted">Penerbit: <?= htmlspecialchars($s['issuer'] ?? '-') ?></small>
+                                                        <br><?= htmlspecialchars($s['issuer'] ?? '-') ?>
                                                     </li>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
@@ -419,13 +413,13 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3"><label class="form-control-label">Jenjang</label>
-                                <input class="form-control" type="text" name="educations[${index}][level]" value="${data.level || ''}" placeholder="S1/S2/S3" required></div>
+                                <input class="form-control" type="text" name="pendidikan[${index}][level]" value="${data.level || ''}" placeholder="S1/S2/S3" required></div>
                             <div class="col-md-6 mb-3"><label class="form-control-label">Jurusan</label>
-                                <input class="form-control" type="text" name="educations[${index}][major]" value="${data.major || ''}" placeholder="Teknik Informatika" required></div>
+                                <input class="form-control" type="text" name="pendidikan[${index}][major]" value="${data.major || ''}" placeholder="Teknik Informatika" required></div>
                             <div class="col-md-9 mb-3"><label class="form-control-label">Institusi</label>
-                                <input class="form-control" type="text" name="educations[${index}][institution_name]" value="${data.institution_name || ''}" placeholder="Universitas X" required></div>
+                                <input class="form-control" type="text" name="pendidikan[${index}][institution_name]" value="${data.institution_name || ''}" placeholder="Universitas X" required></div>
                             <div class="col-md-3 mb-3"><label class="form-control-label">Tahun Lulus</label>
-                                <input class="form-control" type="number" name="educations[${index}][graduation_year]" value="${data.graduation_year || ''}" placeholder="2020" required></div>
+                                <input class="form-control" type="number" name="pendidikan[${index}][graduation_year]" value="${data.graduation_year || ''}" placeholder="2020" required></div>
                         </div>
                     </div>`;
                 } else if (type === 'sertifikat') { // Form Sertifikasi
@@ -437,11 +431,11 @@
                         </div>
                         <div class="row">
                             <div class="col-md-12 mb-3"><label class="form-control-label">Nama Sertifikat</label>
-                                <input class="form-control" type="text" name="certificates[${index}][name]" value="${data.name || ''}" required></div>
+                                <input class="form-control" type="text" name="sertifikat[${index}][name]" value="${data.name || ''}" required></div>
                             <div class="col-md-8 mb-3"><label class="form-control-label">Penerbit</label>
-                                <input class="form-control" type="text" name="certificates[${index}][issuer]" value="${data.issuer || ''}" required></div>
+                                <input class="form-control" type="text" name="sertifikat[${index}][issuer]" value="${data.issuer || ''}" required></div>
                             <div class="col-md-4 mb-3"><label class="form-control-label">Tahun Terbit</label>
-                                <input class="form-control" type="number" name="certificates[${index}][issue_year]" value="${data.issue_year || ''}" required></div>
+                                <input class="form-control" type="number" name="sertifikat[${index}][issue_year]" value="${data.issue_year || ''}" required></div>
                         </div>
                     </div>`;
                 }
@@ -453,48 +447,38 @@
                 const title = type === 'keahlian' ? 'Keahlian' : 'Mata Kuliah';
                 const placeholder = type === 'keahlian' ? 'Contoh: Data Mining' : 'Contoh: Algoritma dan Struktur Data';
                 return `
-            <div class="input-group mb-2 item-list-simple" data-index="${index}">
-            <span class="input-group-text text-sm" style="width: 100px;">${title}</span>
-            <input type="text" class="form-control" name="${type}[]" value="${item || ''}" placeholder="${placeholder}" required>
-            <button class="btn btn-outline-danger mb-0 delete-simple-item-btn" type="button"><i class="fa fa-times"></i></button>
-            </div>`;
+                    <div class="input-group mb-2 item-list-simple" data-index="${index}">
+                    <span class="input-group-text text-sm" style="width: 100px;">${title}</span>
+                    <input type="text" class="form-control" name="${type}[]" value="${item || ''}" placeholder="${placeholder}" required>
+                    <button class="btn btn-outline-danger mb-0 delete-simple-item-btn" type="button"><i class="fa fa-times"></i></button>
+                    </div>`;
             }
 
             // Show Edit Form Sosmed
             function generateSosmedEditForm(item, index) {
                 return `
-        <div class="input-group mb-2 sosmed-item-edit" data-index="${index}">
-            <span class="input-group-text text-sm" style="width: 120px;">${item.name}</span>
-
-            <input type="hidden" name="social_media[${index}][name]" value="${item.name}">
-            <input type="url" class="form-control"
-                   name="social_media[${index}][link]"
-                   value="${item.link || ''}" placeholder="Link URL" required>
-
-            <button class="btn btn-outline-danger delete-sosmed-btn mb-0" type="button">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>`;
+                    <div class="input-group mb-2 sosmed-item-edit" data-index="${index}">
+                        <span class="input-group-text text-sm" style="width: 120px;">${item.name}</span>
+                        <input type="hidden" name="social_media[${index}][name]" value="${item.name}">
+                        <input type="url" class="form-control" name="social_media[${index}][link]" value="${item.link || ''}" placeholder="Link URL" required>
+                        <button class="btn btn-outline-danger delete-sosmed-btn mb-0" type="button">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>`;
             }
-
 
             // Show New Form Sosmed
             function generateNewSosmedForm(index, name, link) {
                 return `
-        <div class="input-group mb-2 new-sosmed-item" data-index="${index}">
-            <span class="input-group-text text-sm" style="width: 120px;">${name}</span>
-
-            <input type="hidden" name="social_media_new[${index}][name]" value="${name}">
-            <input type="url" class="form-control"
-                   name="social_media_new[${index}][link]"
-                   value="${link}" required>
-
-            <button class="btn btn-outline-danger delete-new-sosmed-btn mb-0" type="button">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>`;
+                    <div class="input-group mb-2 new-sosmed-item" data-index="${index}">
+                        <span class="input-group-text text-sm" style="width: 120px;">${name}</span>
+                        <input type="hidden" name="social_media_new[${index}][name]" value="${name}">
+                        <input type="url" class="form-control" name="social_media_new[${index}][link]" value="${link}" required>
+                        <button class="btn btn-outline-danger delete-new-sosmed-btn mb-0" type="button">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>`;
             }
-
 
             // Show Alert
             function showAlert(message, type) {
@@ -524,7 +508,6 @@
                     if (typeof callback === 'function') callback();
                 });
             }
-
             // End of Helper Functions
 
             // Javascript Event Handlers
@@ -548,8 +531,7 @@
                 $('#new_sosmed_link').val('');
             });
 
-
-            // Logika untuk menambahkan item sosmed baru ke container
+            // Handler untuk menambahkan item sosmed baru ke container
             $(document).on('click', '#add-sosmed-btn', function() {
                 const name = $('#new_sosmed_name').val().trim();
                 const link = $('#new_sosmed_link').val().trim();
@@ -570,14 +552,14 @@
             });
 
 
-            // Logika Hapus item Sosmed yang sudah ada
+            // Handler Hapus item Sosmed yang sudah ada
             $(document).on('click', '.delete-sosmed-btn', function() {
                 const row = $(this).closest('.sosmed-item-edit');
                 showConfirm('Hapus item media sosial ini?', () => row.remove());
             });
 
 
-            // Logika Hapus item Sosmed BARU
+            // Handler Hapus item Sosmed BARU
             $(document).on('click', '.delete-new-sosmed-btn', function() {
                 const row = $(this).closest('.new-sosmed-item');
                 showConfirm('Hapus item media sosial baru ini?', () => row.remove());
@@ -595,7 +577,7 @@
                 let title = '';
                 modal.find('#list-type-input').val(listType);
 
-                // Logika untuk Pendidikan & Sertifikasi (Accordion + Hapus)
+                // Handler untuk Pendidikan & Sertifikasi (Accordion + Hapus)
                 if (listType === 'pendidikan_sertifikat') {
                     title = 'Pendidikan & Sertifikasi';
 
@@ -604,9 +586,6 @@
                         generateListItemForm('pendidikan', item, `pend_${item.id_pendidikan || i}`)
                     ).join('');
 
-                    console.log(educationForms);
-
-
                     // Sertifikasi
                     let certificationForms = (USER_DATA.certificates || []).map((item, i) =>
                         generateListItemForm('sertifikat', item, `cert_${item.id_sertifikat || i}`)
@@ -614,83 +593,76 @@
 
                     modal.find('#modal-title-type').text(title);
                     contentArea.html(`
-                                <div class="accordion" id="dataAccordion">
-                                    <div class="accordion-item"> 
-                                        <h2 class="accordion-header" id="headingPendidikan">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePendidikan" aria-expanded="false" aria-controls="collapsePendidikan">
-                                                Riwayat Pendidikan (${(USER_DATA.educations || []).length} Data)
-                                            </button>
-                                        </h2>
-                                        <div id="collapsePendidikan" class="accordion-collapse collapse" aria-labelledby="headingPendidikan" data-bs-parent="#dataAccordion">
-                                            <div class="accordion-body">
-                                                <div id="pendidikan-container">${educationForms || '<p class="text-muted">Belum ada data. Tekan "Tambah Pendidikan" di bawah.</p>'}</div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="pendidikan"><i class="fa fa-plus me-1"></i> Tambah Pendidikan</button>
-                                            </div>
-                                        </div>
+                        <div class="accordion" id="dataAccordion">
+                            <div class="accordion-item"> 
+                                <h2 class="accordion-header" id="headingPendidikan">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePendidikan" aria-expanded="false" aria-controls="collapsePendidikan">
+                                        Riwayat Pendidikan (${(USER_DATA.educations || []).length} Data)
+                                    </button>
+                                </h2>
+                                <div id="collapsePendidikan" class="accordion-collapse collapse" aria-labelledby="headingPendidikan" data-bs-parent="#dataAccordion">
+                                    <div class="accordion-body">
+                                        <div id="pendidikan-container">${educationForms || '<p class="text-muted">Belum ada data. Tekan "Tambah Pendidikan" di bawah.</p>'}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="pendidikan"><i class="fa fa-plus me-1"></i> Tambah Pendidikan</button>
                                     </div>
-
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="headingSertifikat">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSertifikat" aria-expanded="false" aria-controls="collapseSertifikat">
-                                                Daftar Sertifikasi (${(USER_DATA.certificates || []).length} Data)
-                                            </button>
-                                        </h2>
-                                        <div id="collapseSertifikat" class="accordion-collapse collapse" aria-labelledby="headingSertifikat" data-bs-parent="#dataAccordion">
-                                            <div class="accordion-body">
-                                                <div id="sertifikat-container">${certificationForms || '<p class="text-muted">Belum ada data. Tekan "Tambah Sertifikasi" di bawah.</p>'}</div>
-                                                <button type="button" class="btn btn-sm btn-outline-info mt-3 add-item-btn" data-type="sertifikat"><i class="fa fa-plus me-1"></i> Tambah Sertifikasi</button>
-                                            </div>
-                                        </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingSertifikat">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSertifikat" aria-expanded="false" aria-controls="collapseSertifikat">
+                                        Daftar Sertifikasi (${(USER_DATA.certificates || []).length} Data)
+                                    </button>
+                                </h2>
+                                <div id="collapseSertifikat" class="accordion-collapse collapse" aria-labelledby="headingSertifikat" data-bs-parent="#dataAccordion">
+                                    <div class="accordion-body">
+                                        <div id="sertifikat-container">${certificationForms || '<p class="text-muted">Belum ada data. Tekan "Tambah Sertifikasi" di bawah.</p>'}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-info mt-3 add-item-btn" data-type="sertifikat"><i class="fa fa-plus me-1"></i> Tambah Sertifikasi</button>
                                     </div>
-                                </div>`);
-                    // --- Logika untuk Keahlian & Mata Kuliah (Accordion)
+                                </div>
+                            </div>
+                        </div>`);
                 } else if (listType === 'keahlian_mk') {
                     title = 'Keahlian & Mata Kuliah';
-
-                    let keahlianHtml = (USER_DATA.skills || []).map((item, i) =>
-                        generateKeahlianMKForm('keahlian', item, `keahlian_${i}`)
-                    ).join('');
-
-                    let mkHtml = (USER_DATA.courses || []).map((item, i) =>
-                        generateKeahlianMKForm('mata_kuliah', item, `mk_${i}`)
-                    ).join('');
-
+                    let keahlianHtml = (USER_DATA.skills || []).map((item, i) => generateKeahlianMKForm('keahlian', item, `keahlian_${i}`)).join('');
+                    let mkHtml = (USER_DATA.courses || []).map((item, i) => generateKeahlianMKForm('mata_kuliah', item, `mk_${i}`)).join('');
                     modal.find('#modal-title-type').text(title);
+
                     contentArea.html(`
-                                <div class="accordion" id="keahlianMkAccordion">
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="headingKeahlian">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseKeahlian" aria-expanded="true" aria-controls="collapseKeahlian">
-                                                Keahlian (${(USER_DATA.skills || []).length} Data)
-                                            </button>
-                                        </h2>
-                                        <div id="collapseKeahlian" class="accordion-collapse collapse show" aria-labelledby="headingKeahlian" data-bs-parent="#keahlianMkAccordion">
-                                            <div class="accordion-body">
-                                                <div id="keahlian-list-container">${keahlianHtml}</div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="keahlian"><i class="fa fa-plus me-1"></i> Tambah Keahlian</button>
-                                            </div>
-                                        </div>
+                        <div class="accordion" id="keahlianMkAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingKeahlian">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseKeahlian" aria-expanded="true" aria-controls="collapseKeahlian">
+                                        Keahlian (${(USER_DATA.skills || []).length} Data)
+                                    </button>
+                                </h2>
+                                <div id="collapseKeahlian" class="accordion-collapse collapse show" aria-labelledby="headingKeahlian" data-bs-parent="#keahlianMkAccordion">
+                                    <div class="accordion-body">
+                                        <div id="keahlian-list-container">${keahlianHtml}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="keahlian"><i class="fa fa-plus me-1"></i> Tambah Keahlian</button>
                                     </div>
-                                    <?php if ($user['role'] == 'kepala' || $user['role'] == 'dosen'): ?>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="headingMK">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMK" aria-expanded="false" aria-controls="collapseMK">
-                                                Mata Kuliah Diampu (${(USER_DATA.courses || []).length} Data)
-                                            </button>
-                                        </h2>
-                                        <div id="collapseMK" class="accordion-collapse collapse" aria-labelledby="headingMK" data-bs-parent="#keahlianMkAccordion">
-                                            <div class="accordion-body">
-                                                <div id="mk-list-container">${mkHtml}</div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="mata_kuliah"><i class="fa fa-plus me-1"></i> Tambah Mata Kuliah</button>
-                                            </div>
-                                        </div>
+                                </div>
+                            </div>
+                            <?php if ($user['role'] == 'kepala' || $user['role'] == 'dosen'): ?>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingMK">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMK" aria-expanded="false" aria-controls="collapseMK">
+                                        Mata Kuliah Diampu (${(USER_DATA.courses || []).length} Data)
+                                    </button>
+                                </h2>
+                                <div id="collapseMK" class="accordion-collapse collapse" aria-labelledby="headingMK" data-bs-parent="#keahlianMkAccordion">
+                                    <div class="accordion-body">
+                                        <div id="mk-list-container">${mkHtml}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-3 add-item-btn" data-type="mata_kuliah"><i class="fa fa-plus me-1"></i> Tambah Mata Kuliah</button>
                                     </div>
-                                    <?php endif; ?>
-                                </div> `);
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div> `);
                 }
             });
 
-            // Logika Tambah Item Baru (Pendidikan/Sertifikasi/Keahlian/MK)
+            // Handler Tambah Item Baru (Pendidikan/Sertifikasi/Keahlian/MK)
             $(document).on('click', '.add-item-btn', function() {
                 const type = $(this).data('type');
                 const newIndex = 'NEW_' + Date.now();
@@ -708,7 +680,7 @@
                 }
             });
 
-            // Logika Hapus Item (untuk Pendidikan/Sertifikat)
+            // Handler Hapus Item (untuk Pendidikan/Sertifikat)
             $(document).on('click', '.delete-item-btn', function() {
                 const btn = $(this);
                 showConfirm('Yakin ingin menghapus item ini?', function() {
@@ -716,7 +688,7 @@
                 });
             });
 
-            // Logika Hapus Item (untuk Keahlian/MK)
+            // Handler Hapus Item (untuk Keahlian/MK)
             $(document).on('click', '.delete-simple-item-btn', function() {
                 const btn = $(this);
                 showConfirm('Yakin ingin menghapus item ini?', function() {
@@ -759,7 +731,7 @@
                 const formData = form.serialize();
 
                 $.ajax({
-                    url: BASE_URL + '/profile/update-list', // Endpoint
+                    url: BASE_URL + '/profile/update-list',
                     type: 'POST',
                     data: formData,
                     dataType: 'json',
@@ -778,8 +750,9 @@
                 });
             });
 
+            // Handler AJAX: UPDATE FORM BASIC
             $("#profileForm").on("submit", function(e) {
-                e.preventDefault(); // agar tidak reload
+                e.preventDefault();
 
                 let formData = new FormData(this);
 
@@ -802,7 +775,6 @@
                     }
                 });
             });
-
             // End of Handler Function
 
             // Sidenav Scrollbar
@@ -814,12 +786,12 @@
                 Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
             }
         </script>
-        <script src="/mvc-pbl/public/assets/js/core/popper.min.js"></script>
-        <script script src="/mvc-pbl/public/assets/js/core/bootstrap.min.js"></script>
-        <script src="/mvc-pbl/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
-        <script src="/mvc-pbl/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/core/popper.min.js"></script>
+        <script script src="/cms_ivss/public/assets/js/core/bootstrap.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
         <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
-        <script src="/mvc-pbl/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+        <script src="/cms_ivss/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
         <!-- Github buttons -->
         <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>

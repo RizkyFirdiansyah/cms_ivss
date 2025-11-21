@@ -7,18 +7,11 @@ class ProfileModel
 
     public function __construct()
     {
-        // Asumsi class Database tersedia dan mengembalikan koneksi PDO
         $db = new Database();
         $this->conn = $db->getConnection();
     }
 
-    // =========================================================================
-    //                            GETTER DATA (INDEX VIEW)
-    // =========================================================================
-
-    /**
-     * Mengambil seluruh data profil, termasuk list dinamis, melalui satu PostgreSQL function.
-     */
+    // Read Data Profile
     public function getProfileById($id)
     {
         $query = "SELECT * FROM get_user_profile_data(:id);";
@@ -29,8 +22,6 @@ class ProfileModel
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result) {
-            // Sesuaikan dengan nama kolom function yang BARU
-
             $result['social_media']  = json_decode($result['social_media'] ?? '[]', true);
             $result['educations']    = json_decode($result['educations'] ?? '[]', true);
             $result['certificates']  = json_decode($result['certificates'] ?? '[]', true);
@@ -41,10 +32,18 @@ class ProfileModel
         return $result;
     }
 
-    // update
+    // Update Data Profile
     public function updateBasicProfile($id, $data)
     {
-        // Query dasar
+        // Cek foto lama hanya jika foto baru di-upload
+        $old_photo_path = null;
+        if (!empty($data['photo'])) {
+            $stmt_old = $this->conn->prepare("SELECT photo FROM users WHERE id = :id"); // Get path foto lama
+            $stmt_old->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt_old->execute();
+            $old_photo_path = $stmt_old->fetchColumn();
+        }
+
         $query = "UPDATE users SET 
                 name = :name, 
                 email = :email, 
@@ -59,8 +58,6 @@ class ProfileModel
 
         try {
             $stmt = $this->conn->prepare($query);
-
-            // Binding data dasar
             $stmt->bindParam(':name', $data['name']);
             $stmt->bindParam(':email', $data['email']);
             $stmt->bindParam(':address', $data['address']);
@@ -71,27 +68,28 @@ class ProfileModel
                 $stmt->bindParam(':photo', $data['photo']);
             }
 
-            return $stmt->execute();
+            $success = $stmt->execute();
+
+            if ($success && !empty($data['photo'])) {
+                return $old_photo_path;
+            }
+
+            return $success;
         } catch (PDOException $e) {
             error_log("DB Error (updateBasicProfile): " . $e->getMessage());
             return false;
         }
     }
 
-    /**
-     * Update/Kelola media sosial (UPDATE/DELETE/INSERT).
-     * Disinkronkan dengan Controller yang menggunakan data 'old' dan 'new'.
-     */
+    // Update Data Sosmed
     public function updateSosialMedia($user_id, $sosmed_old, $sosmed_new)
     {
         $this->conn->beginTransaction();
 
         try {
-            // 1. Hapus semua sosmed milik user
             $this->conn->prepare("DELETE FROM user_social_media WHERE user_id = :user_id")
                 ->execute([':user_id' => $user_id]);
 
-            // 2. Gabungkan data lama + baru
             $merged = array_merge($sosmed_old, $sosmed_new);
 
             $insert = $this->conn->prepare("
@@ -99,7 +97,7 @@ class ProfileModel
             VALUES (:user_id, :social_media_id, :link)
             ON CONFLICT (user_id, social_media_id)
             DO UPDATE SET link = EXCLUDED.link
-        ");
+            ");
 
             foreach ($merged as $item) {
                 $name = trim($item['name'] ?? '');
@@ -107,7 +105,6 @@ class ProfileModel
 
                 if ($name === '' || $link === '') continue;
 
-                // Dapatkan atau buat ID sosmed
                 $sosmed_id = $this->getOrCreateSocialMediaId($name);
 
                 if (!$sosmed_id) continue;
@@ -128,16 +125,7 @@ class ProfileModel
         }
     }
 
-
-    // =========================================================================
-    //                      UPDATE LIST DINAMIS (update_list)
-    // =========================================================================
-
-    /**
-     * Fungsi utama untuk memperbarui list dinamis (Pendidikan/Sertifikasi/Keahlian/MK).
-     * Menggunakan Transaction.
-     * @param array $post_data Seluruh array $_POST dari Controller
-     */
+    // Update Data List Dinamis
     public function updateDynamicLists($id_user, $list_type, $post_data)
     {
         $this->conn->beginTransaction();
@@ -161,7 +149,6 @@ class ProfileModel
         } catch (PDOException $e) {
             $this->conn->rollBack();
             error_log("DB Error in updateDynamicLists: " . $e->getMessage());
-            // Melempar Exception agar Controller bisa menampilkannya
             throw new Exception("DB Error: " . $e->getMessage());
         } catch (Exception $e) {
             $this->conn->rollBack();
@@ -170,32 +157,27 @@ class ProfileModel
         }
     }
 
-    // ------------------- LOGIKA UPDATE PER ITEM -------------------
 
-    private function updatePendidikanList($id, $pendidikan_list)
+    // Update Data Pendidikan
+    private function updatePendidikanList($id_user, $pendidikan_list)
     {
-        // Hapus semua data lama user ini
         $this->conn->prepare("DELETE FROM educations WHERE user_id = :user_id")
-            ->execute([':user_id' => $id]);
+            ->execute([':user_id' => $id_user]);
 
         if (!empty($pendidikan_list)) {
-
-            $query = "INSERT INTO educations (user_id, level, major, institution_name, graduation_year) 
-                  VALUES (:user_id, :level, :major, :institution_name, :graduation_year)";
+            $query = "INSERT INTO educations (user_id, level, major, institution_name, graduation_year) VALUES (:user_id, :level, :major, :institution_name, :graduation_year)";
             $stmt = $this->conn->prepare($query);
 
             foreach ($pendidikan_list as $item) {
-
-                // FIX: cocokkan dengan NAME pada form
                 $level   = $item['level'] ?? null;
                 $major   = $item['major'] ?? null;
-                $inst    = $item['institution'] ?? null;     // sesuai views
-                $year    = $item['year'] ?? null;            // sesuai views
+                $inst    = $item['institution_name'] ?? null;
+                $year    = $item['graduation_year'] ?? null;
 
-                if (empty($level)) continue; // validasi benar
+                if (empty($level)) continue;
 
                 $stmt->execute([
-                    ':user_id' => $id,
+                    ':user_id' => $id_user,
                     ':level' => $level,
                     ':major' => $major,
                     ':institution_name' => $inst,
@@ -203,95 +185,79 @@ class ProfileModel
                 ]);
             }
         }
-
         return true;
     }
 
-
-    private function updateSertifikasiList($id, $sertifikat_list)
+    // Update Data Sertifikasi
+    private function updateSertifikasiList($id_user, $sertifikat_list)
     {
-        // Hapus semua data lama user ini
         $this->conn->prepare("DELETE FROM certificates WHERE user_id = :user_id")
-            ->execute([':user_id' => $id]);
+            ->execute([':user_id' => $id_user]);
 
         if (!empty($sertifikat_list)) {
-
-            // Kolom di DB: user_id, name, issuer, issue_year
-            $query = "INSERT INTO certificates (user_id, name, issuer, issue_year)
-                  VALUES (:user_id, :name, :issuer, :issue_year)";
-
+            $query = "INSERT INTO certificates (user_id, name, issuer, issue_year) VALUES (:user_id, :name, :issuer, :issue_year)";
             $stmt = $this->conn->prepare($query);
 
             foreach ($sertifikat_list as $item) {
-
-                // Sesuaikan dengan atribut input di view
                 $name   = $item['name'] ?? null;
                 $issuer = $item['issuer'] ?? null;
-                $year   = $item['year'] ?? null;
+                $year   = $item['issue_year'] ?? null;
 
-                // Validasi minimal
                 if (empty($name)) continue;
 
                 $stmt->execute([
-                    ':user_id'   => $id,
-                    ':name'      => $name,
-                    ':issuer'    => $issuer,
+                    ':user_id'    => $id_user,
+                    ':name'       => $name,
+                    ':issuer'     => $issuer,
                     ':issue_year' => $year
                 ]);
             }
         }
-
         return true;
     }
 
-
-    private function updateKeahlianMataKuliahList($id_user, $keahlian_list, $mk_list)
+    // Update Data Keahlian dan Mata Kuliah
+    private function updateKeahlianMataKuliahList($id, $keahlian_list, $mk_list)
     {
+        $this->conn->prepare("DELETE FROM user_skills WHERE user_id = :user_id")->execute([':user_id' => $id]);
 
-        // 1. UPDATE KEAHLIAN (FK ke tabel keahlian)
-        $this->conn->prepare("DELETE FROM detail_keahlian WHERE id_user = :id_user")->execute([':id_user' => $id_user]);
         if (!empty($keahlian_list)) {
-            $stmt_keahlian = $this->conn->prepare("INSERT INTO detail_keahlian (id_user, id_keahlian) VALUES (:id_user, :id_keahlian)");
+            $stmt_keahlian = $this->conn->prepare("INSERT INTO user_skills (user_id, skill_id) VALUES (:user_id, :skill_id)");
             foreach ($keahlian_list as $nama_keahlian) {
                 $id_keahlian = $this->getOrCreateKeahlianId($nama_keahlian);
-                if ($id_keahlian) $stmt_keahlian->execute([':id_user' => $id_user, ':id_keahlian' => $id_keahlian]);
+                if ($id_keahlian) $stmt_keahlian->execute([':user_id' => $id, ':skill_id' => $id_keahlian]);
             }
         }
 
-        // 2. UPDATE MATA KULIAH (FK ke tabel mata_kuliah)
-        $stmt_dosen = $this->conn->prepare("SELECT id_dosen FROM dosen WHERE id_user = :id_user");
-        $stmt_dosen->execute([':id_user' => $id_user]);
+        $stmt_dosen = $this->conn->prepare("SELECT id FROM dosen WHERE user_id = :user_id");
+        $stmt_dosen->execute([':user_id' => $id]);
         $id_dosen = $stmt_dosen->fetchColumn();
 
         if ($id_dosen) {
-            // Hapus semua mata kuliah yang diampu dosen ini
-            $this->conn->prepare("DELETE FROM kuliah WHERE id_dosen = :id_dosen")->execute([':id_dosen' => $id_dosen]);
+            $this->conn->prepare("DELETE FROM user_courses WHERE dosen_id = :dosen_id")->execute([':dosen_id' => $id_dosen]);
 
             if (!empty($mk_list)) {
-                $stmt_mk = $this->conn->prepare("INSERT INTO kuliah (id_dosen, id_mk) VALUES (:id_dosen, :id_mk)");
+                $stmt_mk = $this->conn->prepare("INSERT INTO user_courses (dosen_id, course_id) VALUES (:dosen_id, :course_id)");
                 foreach ($mk_list as $nama_mk) {
-                    $id_mk = $this->getOrCreateMataKuliahId($nama_mk); // Menggunakan helper yang sudah diperbaiki
-                    if ($id_mk) $stmt_mk->execute([':id_dosen' => $id_dosen, ':id_mk' => $id_mk]);
+                    $id_mk = $this->getOrCreateMataKuliahId($nama_mk);
+                    if ($id_mk) $stmt_mk->execute([':dosen_id' => $id_dosen, ':course_id' => $id_mk]);
                 }
             }
         }
         return true;
     }
 
-    // ------------------- FUNGSI PEMBANTU (HELPER FUNCTIONS) -------------------
-
-    /**
-     * Cek/Buat ID Keahlian baru jika belum ada.
-     */
+    // Helper Functions
+    // Cek/Buat ID Keahlian baru jika belum ada.
     private function getOrCreateKeahlianId($nama)
     {
-        $stmt_check = $this->conn->prepare("SELECT id_keahlian FROM keahlian WHERE nama_keahlian = :nama");
+        $stmt_check = $this->conn->prepare("SELECT id FROM skills WHERE name = :nama");
         $stmt_check->bindParam(':nama', $nama);
         $stmt_check->execute();
         $id = $stmt_check->fetchColumn();
 
         if (!$id) {
-            $stmt_insert = $this->conn->prepare("INSERT INTO keahlian (nama_keahlian) VALUES (:nama) RETURNING id_keahlian");
+            $stmt_insert = $this->conn->prepare("INSERT INTO skills (name) VALUES (:nama) RETURNING id");
             $stmt_insert->bindParam(':nama', $nama);
             $stmt_insert->execute();
             $id = $stmt_insert->fetchColumn();
@@ -299,48 +265,35 @@ class ProfileModel
         return $id;
     }
 
-    /**
-     * Cek/Buat ID Mata Kuliah baru jika belum ada.
-     * FIX KRITIS: Menambahkan nilai default untuk kolom NOT NULL.
-     */
+
+    // Cek/Buat ID Mata kuliah baru jika belum ada.
     private function getOrCreateMataKuliahId($nama)
     {
-        $stmt_check = $this->conn->prepare("SELECT id_mk FROM mata_kuliah WHERE nama_mk = :nama");
+        $stmt_check = $this->conn->prepare("SELECT id FROM courses WHERE name = :nama");
         $stmt_check->bindParam(':nama', $nama);
         $stmt_check->execute();
         $id = $stmt_check->fetchColumn();
 
         if (!$id) {
-            // FIX: Tambahkan kolom NOT NULL yang diperlukan
-            $stmt_insert = $this->conn->prepare("
-                INSERT INTO mata_kuliah (nama_mk) 
-                VALUES (:nama) 
-                RETURNING id_mk
-            ");
-            $stmt_insert->execute([
-                ':nama' => $nama,
-            ]);
+            $stmt_insert = $this->conn->prepare("INSERT INTO courses (name) VALUES (:nama) RETURNING id");
+            $stmt_insert->bindParam(':nama', $nama);
+            $stmt_insert->execute();
             $id = $stmt_insert->fetchColumn();
         }
         return $id;
     }
 
-    /**
-     * Cek/Buat ID Sosial Media baru jika belum ada (Tabel Master).
-     */
+    // Cek/Buat ID Media Sosial baru jika belum ada.
     private function getOrCreateSocialMediaId($name)
     {
-        // 1. Cek apakah sudah ada
         $stmt = $this->conn->prepare("SELECT id FROM social_media_types WHERE name = :name");
         $stmt->execute([':name' => $name]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row) return $row['id'];
 
-        // 2. Jika tidak ada → buat baru
         $insert = $this->conn->prepare("INSERT INTO social_media_types (name) VALUES (:name) RETURNING id");
         $insert->execute([':name' => $name]);
         return $insert->fetchColumn();
     }
 }
-// END ProfileModel.php

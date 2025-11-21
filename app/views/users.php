@@ -13,7 +13,7 @@
   <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-icons.css" rel="stylesheet" />
   <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
   <script src="https://kit.fontawesome.com/4da45c7bdd.js" crossorigin="anonymous"></script> <!-- Font Awesome itT -->
-  <link id="pagestyle" href="/mvc-pbl/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
+  <link id="pagestyle" href="/cms_ivss/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -24,6 +24,7 @@
 
     <?php include('includes/navbar.php') ?><!-- Navbar -->
 
+    <!-- Manajemen User -->
     <div class="container-fluid pt-2 pb-4">
       <div class="row mx-1">
         <div class="card">
@@ -32,16 +33,16 @@
           </div>
 
           <div class="card-body">
-            <div class="mb-3 d-flex justify-content-between gap-3">
+            <div class="mb-3 d-flex justify-content-between gap-3"> <!-- Search n ADD Button -->
               <div class="input-group">
                 <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-                <input type="text" class="form-control" placeholder="Cari user...">
+                <input type="text" class="form-control" placeholder="Cari user..." id="searchUser">
               </div>
               <button class="btn btn-sm btn-success m-0 p-0 w-25" id="btn-add-user" data-bs-toggle="modal" data-bs-target="#modal-add-user">
                 <i class="fa fa-plus"></i> Tambah User
               </button>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive"> <!-- Table Users -->
               <table class="table align-items-center mb-0">
                 <thead>
                   <tr>
@@ -63,6 +64,7 @@
           </div>
         </div>
       </div>
+      <!-- End Manajemen User -->
 
       <!-- Modal: Add User -->
       <div class="modal fade" id="modal-add-user" tabindex="-1" aria-hidden="true">
@@ -76,7 +78,7 @@
               <div id="add-user-alert"></div>
               <div class="mb-3">
                 <label class="form-label">Nama</label>
-                <input name="nama" type="text" class="form-control" required>
+                <input name="name" type="text" class="form-control" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">Email</label>
@@ -88,7 +90,7 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Program Studi</label>
-                <select name="id_ps" class="form-select" required>
+                <select name="study_program_id" class="form-select" required>
                   <option value="1">Teknik Informatika</option>
                   <option value="2">Sistem Informasi Bisnis</option>
                   <option value="3">Rekayasa Teknologi Informasi</option>
@@ -104,7 +106,7 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Status</label>
-                <select name="status" class="form-select">
+                <select name="is_active" class="form-select">
                   <option value="aktif" selected>Aktif</option>
                   <option value="nonaktif">Nonaktif</option>
                 </select>
@@ -139,11 +141,11 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input name="password" type="password" class="form-control" required>
+                <input name="password" type="password" class="form-control">
               </div>
               <div class="mb-3">
                 <label class="form-label">Status</label>
-                <select id="edit-status" name="status" class="form-select">
+                <select id="edit-status" name="is_active" class="form-select">
                   <option value="aktif">Aktif</option>
                   <option value="nonaktif">Nonaktif</option>
                 </select>
@@ -159,33 +161,166 @@
     </div>
   </main>
 
-  <?php require_once 'includes/footer.php'; ?> <!-- Footer -->
+  <!-- Modal Alert -->
+  <div class="modal fade" id="modal-alert" tabindex="-1" aria-labelledby="alertLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold" id="alertLabel">Pesan</h6>
+        </div>
+        <div class="modal-body text-center py-3">
+          <i id="alert-icon" class="fa fa-info-circle text-primary mb-3" style="font-size: 2rem;"></i>
+          <p id="alert-message" class="mb-0 text-sm"></p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Modal Alert -->
 
-  <!--   Core JS Files   -->
-  <script src="/mvc-pbl/public/assets/js/core/popper.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/core/bootstrap.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/plugins/chartjs.min.js"></script>
+  <!-- Modal Konfirmasi -->
+  <div class="modal fade" id="modal-confirm" tabindex="-1" aria-labelledby="confirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold" id="confirmLabel">Konfirmasi</h6>
+        </div>
+        <div class="modal-body text-center py-3">
+          <i id="confirm-icon" class="fa fa-question-circle text-warning mb-3" style="font-size: 2rem;"></i>
+          <p id="confirm-message" class="mb-0 text-sm"></p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center">
+          <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn bg-gradient-primary" id="confirm-yes">Ya</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Modal Konfirmasi -->
+
+  <?php require_once 'includes/footer.php'; ?> <!-- Footer -->
 
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script> <!-- Link Jquery -->
 
 
-  <script>
-    // Pastikan jQuery sudah dimuat sebelum skrip ini
-    const BASE_URL = "<?= BASE_URL ?>";
-    let currentPage = 1;
-    const limit = 3;
 
-    /**
-     * Mengambil data user menggunakan jQuery AJAX
-     * @param {number} page - Halaman saat ini.
-     * @param {string} search - Keyword pencarian.
-     */
-    function loadUsers(page = 1, search = '') {
-      // Menggunakan $.ajax()
+  <script>
+    // Global variables
+    const BASE_URL = "<?= BASE_URL ?>";
+    const DEFAULT_LIMIT = 5;
+    let currentPage = 1;
+
+    // Javascript Function Helpers
+    // Generate initials from name
+    function getInitials(name) {
+      if (!name) return '';
+      const parts = String(name).trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
+    // Generate random color
+    function getRandomColor() {
+      const hue = Math.floor(Math.random() * 360);
+      const sat = Math.floor(Math.random() * 30) + 65;
+      const light = Math.floor(Math.random() * 20) + 40;
+      return `hsl(${hue} ${sat}% ${light}%)`;
+    }
+
+    // Show alert
+    function showAlert(message, type = 'info') {
+      const icons = {
+        success: 'fa-check-circle text-success',
+        error: 'fa-circle-xmark text-danger',
+        warning: 'fa-exclamation-triangle text-warning',
+        info: 'fa-info-circle text-primary'
+      };
+      $('#alert-icon').attr('class', `fa ${icons[type] || icons.info} mb-3`).css('font-size', '1.6rem');
+      $('#alert-message').html(message);
+      const modal = new bootstrap.Modal(document.getElementById('modal-alert'));
+      modal.show();
+      setTimeout(() => {
+        modal.hide();
+      }, 1000);
+    }
+
+    // Show confirm
+    function showConfirm(message, callback) {
+      $('#confirm-message').html(message);
+      const modalEl = document.getElementById('modal-confirm');
+      const modal = new bootstrap.Modal(modalEl);
+      $('#confirm-yes').off('click').on('click', function() {
+        modal.hide();
+        if (typeof callback === 'function') callback(true);
+      });
+      $('#confirm-no').off('click').on('click', function() {
+        modal.hide();
+        if (typeof callback === 'function') callback(false);
+      });
+      modal.show();
+    }
+
+    // Show edit user
+    window.showEditUser = function(id_user, role, status) {
+      const modalEl = document.getElementById('modal-edit-user');
+      if (!modalEl) return console.error('Modal edit user tidak ditemukan.');
+
+      // Isi form di modal
+      document.getElementById('edit-id_user').value = id_user;
+      document.getElementById('edit-role').value = role;
+      document.getElementById('edit-status').value = status;
+
+      // Tampilkan modal
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    };
+
+    // Render user row
+    function renderUserRow(usr) {
+      const isActive = (usr.is_active === 'aktif' || usr.is_active === '1' || usr.is_active === 1 || usr.is_active === true);
+      const statusIcon = isActive ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger';
+
+      let avatarHtml = '';
+      if (usr.photo && usr.photo !== '' && usr.photo !== null && !/default\.(png|jpg|jpeg)$/i.test(usr.photo)) {
+        avatarHtml = `<div><img src="${BASE_URL}/uploads/${encodeURIComponent(usr.photo)}" class="avatar avatar-md me-3" alt="Foto Profil"></div>`;
+      } else {
+        const initials = getInitials(usr.name_user || usr.name || '');
+        const bg = getRandomColor();
+        avatarHtml = `<div class="avatar avatar-md me-3 d-flex justify-content-center align-items-center" style="background:${bg}; color:#fff; font-weight:600;">${initials}</div>`;
+      }
+
+      return `
+          <tr>
+            <td>
+              <div class="d-flex px-2 py-1">
+                ${avatarHtml}
+                <div class="d-flex flex-column justify-content-center">
+                  <h6 class="mb-0 text-xs">${usr.name_user}</h6>
+                  <p class="text-xs text-secondary mb-0">${usr.email}</p>
+                </div>
+              </div>
+            </td>
+            <td class="text-center text-xs text-capitalize">${usr.role }</td>
+            <td class="text-center text-lg"><i class="fa-solid ${statusIcon}"></i></td>
+            <td class="text-center text-xs text-capitalize">${usr.name_ps}</td>
+            <td class="text-center">
+            <button class="btn btn-sm btn-secondary me-1" onclick="showEditUser(${usr.id}, '${usr.role}', '${usr.is_active}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser(${usr.id})">Delete</button>
+            </td>
+          </tr>
+      `;
+    }
+
+    // Load users
+    function loadUsers(page = 1, search = '', limit = DEFAULT_LIMIT) {
+      const tbody = $('#userTableBody');
+      const pagination = $('#pagination');
+      tbody.html(`<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>`);
+      pagination.empty();
+
       $.ajax({
-        url: `${BASE_URL}/user/list`,
+        url: BASE_URL + '/user/list',
         method: 'GET',
         dataType: 'json',
         data: {
@@ -194,164 +329,157 @@
           search: search
         },
         success: function(res) {
-          const tbody = $('#userTableBody');
-          tbody.empty(); // Menggantikan innerHTML = ''
-          const pagination = $('#pagination');
-          pagination.empty();
-
-          if (!res.data || res.data.length === 0) {
+          tbody.empty();
+          if (!res || !res.data || res.data.length === 0) {
             tbody.append(`<tr><td colspan="5" class="text-center text-muted">Tidak ada data user.</td></tr>`);
             return;
           }
 
-          // --- Render Data Tabel ---
-          let tableRows = '';
-          res.data.forEach(usr => {
-            const statusIcon = usr.status === 'aktif' ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger';
-            tableRows += `
-                    <tr >
-                        <td>
-                            <div class="d-flex px-2 py-1">
-                                <div><img src="${BASE_URL}/uploads/${usr.foto ?? 'default.png'}" class="avatar avatar-sm me-3" alt=""></div>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <h6 class="mb-0 text-xs">${usr.nama}</h6>
-                                    <p class="text-xs text-secondary mb-0">${usr.email}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center text-xs">${usr.role}</td>
-                        <td class="text-center text-sm"><i class="fa-solid ${statusIcon}"></i></td>
-                        <td class="text-center text-xs">${usr.nama_ps ?? '-'}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-secondary" onclick="showEditUser(${usr.id_user}, '${usr.role}', '${usr.status}')">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${usr.id_user})">Delete</button>
-                        </td>
-                    </tr>`;
-          });
-          tbody.append(tableRows);
+          // Render rows
+          res.data.forEach(u => tbody.append(renderUserRow(u)));
 
-          // --- Render Pagination ---
-          const totalPages = Math.ceil(res.total / limit);
-          let paginationHTML = '';
+          // Pagination
+          const total = Number(res.total || 0);
+          const totalPages = Math.max(1, Math.ceil(total / limit));
+          let html = '';
           for (let i = 1; i <= totalPages; i++) {
-            const btnClass = i === page ? 'btn-primary' : 'btn-outline-primary';
-            const searchVal = $('#searchUser').val();
-            paginationHTML += `<button class="btn btn-sm px-3 py-2 ${btnClass} mx-1" onclick="loadUsers(${i}, '${searchVal}')">${i}</button>`;
+            const cls = (i === page) ? 'btn-primary' : 'btn-outline-primary';
+            html += `<button class="btn btn-sm px-3 py-2 ${cls} mx-1" onclick="loadUsers(${i}, '${encodeURIComponent(search)}', ${limit})">${i}</button>`;
           }
-          pagination.append(paginationHTML);
-
+          pagination.html(html);
           currentPage = page;
         },
-        error: function(jqXHR, textStatus, errorThrown) {
-          console.error('Error fetching users:', textStatus, errorThrown);
-          $('#userTableBody').append(`<tr><td colspan="5" class="text-center text-danger">Gagal memuat data. Periksa konsol.</td></tr>`);
+        error: function(xhr, status, err) {
+          console.error('Error loading users:', status, err);
+          tbody.html(`<tr><td colspan="5" class="text-center text-danger">Gagal memuat data. Periksa konsol.</td></tr>`);
         }
       });
     }
 
-    // --- Tambah User (Menggunakan $.ajax) ---
-    $(document).ready(function() {
-      $('#form-add-user').on('submit', function(e) {
-        alert('test');
-        e.preventDefault();
-        const formData = new FormData(this);
+    // Handler AJAX: CREATE USER
+    $('#form-add-user').on('submit', function(e) {
+      e.preventDefault();
+      const form = this;
+      const fd = new FormData(form);
 
-        $.ajax({
-          url: `${BASE_URL}/user/create`,
-          method: 'POST',
-          data: formData,
-          processData: false, // Penting untuk FormData
-          contentType: false, // Penting untuk FormData
-          dataType: 'json',
-          success: function(res) {
-            if (res.success) {
-              alert('User berhasil ditambahkan!');
-              $('#form-add-user')[0].reset();
-              loadUsers();
-              bootstrap.Modal.getInstance(document.getElementById('modal-add-user')).hide();
-            } else {
-              alert('Gagal menambah user.');
-            }
-          },
-          error: function() {
-            alert('Terjadi kesalahan saat menambah user.');
+      $.ajax({
+        url: BASE_URL + '/user/create',
+        method: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(res) {
+          if (res.success) {
+            showAlert(res.message, 'success');
+            $('#modal-add-user').modal('hide');
+            form.reset();
+            loadUsers(currentPage);
+          } else {
+            showAlert(res.message || 'Gagal menambah user.', 'error');
           }
-        });
-      });
-
-      // --- Edit User (Data Fetching disederhanakan, hanya bagian Update yang diubah ke $.ajax) ---
-      $('#form-edit-user').on('submit', function(e) {
-        e.preventDefault();
-        // Data diambil dari form
-        const formData = $(this).serialize();
-
-        $.ajax({
-          url: `${BASE_URL}/user/update`,
-          method: 'POST',
-          data: formData, // Data sudah di-serialize
-          dataType: 'json',
-          success: function(res) {
-            if (res.success) {
-              alert('User berhasil diperbarui!');
-              loadUsers(currentPage);
-              bootstrap.Modal.getInstance(document.getElementById('modal-edit-user')).hide();
-            } else {
-              alert('Gagal memperbarui user.');
-            }
-          },
-          error: function() {
-            alert('Terjadi kesalahan saat memperbarui user.');
-          }
-        });
-      });
-
-      // --- Delete User (Menggunakan $.ajax) ---
-      window.deleteUser = function(id) {
-        if (!confirm("Yakin hapus user ini?")) return;
-
-        $.ajax({
-          url: `${BASE_URL}/user/delete`,
-          method: 'POST',
-          data: {
-            id_user: id
-          }, // Mengirim data sebagai objek
-          dataType: 'json',
-          success: function(res) {
-            if (res.success) {
-              alert('User berhasil dihapus!');
-              loadUsers(currentPage);
-            } else {
-              alert('Gagal menghapus user.');
-            }
-          },
-          error: function() {
-            alert('Terjadi kesalahan saat menghapus user.');
-          }
-        });
-      }
-
-      // --- Inisialisasi dan Pencarian ---
-      loadUsers();
-
-      $('#searchUser').on('input', function() {
-        loadUsers(1, $(this).val());
+        },
+        error: function(xhr) {
+          showAlert('Terjadi kesalahan saat menambah user: ' + (xhr.responseText || xhr.statusText), 'warning');
+          console.error(xhr);
+        }
       });
     });
 
-    // Fungsi showEditUser tetap menggunakan vanilla JS karena sudah ringkas, 
-    // tetapi perlu diperbaiki untuk passing role dan status yang belum ada di loadUsers loop Anda
-    // Catatan: Anda tidak mengambil role dan status di loadUsers loop, jadi perlu perbaikan di sana atau fetch data user di sini.
-    window.showEditUser = function(id_user, role, status) {
-      // Skenario terbaik: Fetch data user berdasarkan ID di sini
-      // Skenario sederhana (mengikuti struktur Anda): Isi hanya ID, dan isian lain (role/status) diisi melalui fetch detail.
-      document.getElementById('edit-id_user').value = id_user;
-      document.getElementById('edit-role').value = role;
-      document.getElementById('edit-status').value = status;
-      new bootstrap.Modal(document.getElementById('modal-edit-user')).show();
-      // **PERHATIAN: Anda perlu menambahkan logic FETCH DETAIL USER di sini
-      // karena data role dan status tidak dikirimkan ke fungsi ini dari loadUsers.**
+    // Handler AJAX: UPDATE USER
+    $('#form-edit-user').on('submit', function(e) {
+      e.preventDefault();
+
+      const formData = $(this).serialize();
+      console.log(formData);
+
+      if (!$('#edit-id_user').val()) {
+        return showAlert('ID User tidak ditemukan.', 'warning');
+      }
+
+      $.ajax({
+        url: `${BASE_URL}/user/update`,
+        method: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(res) {
+          if (res.success) {
+            showAlert(res.message, 'success');
+            $('#modal-edit-user').modal('hide');
+            loadUsers(currentPage);
+          } else {
+            showAlert(res.message, 'error');
+          }
+        },
+        error: function(xhr) {
+          showAlert(
+            'Terjadi kesalahan saat update user: ' + (xhr.responseText || 'Unknown Error'),
+            'warning'
+          );
+        }
+      });
+    });
+
+    // Handler AJAX: DELETE USER
+    function deleteUser(id) {
+      showConfirm('Anda yakin ingin menghapus user ini?', function(confirmed) {
+        if (!confirmed) return;
+        $.ajax({
+          url: BASE_URL + '/user/delete',
+          method: 'POST',
+          data: {
+            id_user: id
+          },
+          dataType: 'json',
+          success: function(res) {
+            if (res.success) {
+              showAlert(res.message || 'User berhasil dihapus.', 'success');
+              loadUsers(currentPage);
+            } else {
+              showAlert(res.message || 'Gagal menghapus user.', 'error');
+            }
+          },
+          error: function(xhr) {
+            showAlert('Gagal menghapus user: ' + (xhr.responseText || xhr.statusText), 'warning');
+            console.error(xhr);
+          }
+        });
+      });
     }
+
+    // Search
+    let _searchTimeout = null;
+    $('#searchUser').on('keyup', function() {
+      clearTimeout(_searchTimeout);
+      const q = $(this).val();
+      _searchTimeout = setTimeout(() => {
+        loadUsers(1, q, DEFAULT_LIMIT);
+      }, 300);
+    });
+
+    // Init
+    $(document).ready(function() {
+      // initial load
+      loadUsers(1, '', DEFAULT_LIMIT);
+
+      // safety: ensure modals exist
+      if (!document.getElementById('modal-alert')) {
+        console.warn('Element #modal-alert tidak ditemukan. showAlert() membutuhkan modal ini.');
+      }
+      if (!document.getElementById('modal-confirm')) {
+        console.warn('Element #modal-confirm tidak ditemukan. showConfirm() membutuhkan modal ini.');
+      }
+    });
   </script>
+
+
+  <!--   Core JS Files   -->
+  <script src="/cms_ivss/public/assets/js/core/popper.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/core/bootstrap.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/plugins/chartjs.min.js"></script>
+
 
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
@@ -363,7 +491,7 @@
     }
   </script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
-  <script src="/mvc-pbl/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+  <script src="/cms_ivss/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>

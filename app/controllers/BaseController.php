@@ -15,15 +15,13 @@ class BaseController
     // Inisialisasi model umum (boleh digunakan semua controller)
     $this->profileModel = new ProfileModel();
 
-    // Jika user sudah login, simpan datanya untuk penggunaan global
+    // Simpan data user yang sedang login
     if (isset($_SESSION['id'])) {
       $this->user = $this->profileModel->getProfileById($_SESSION['id']);
     }
   }
 
-  /**
-   * Fungsi wajib login, panggil di controller yang butuh proteksi.
-   */
+  // Wajib Login
   protected function requireLogin()
   {
     if (!isset($_SESSION['id'])) {
@@ -31,9 +29,7 @@ class BaseController
     }
   }
 
-  /**
-   * Fungsi redirect dengan pesan opsional (flash message)
-   */
+  // Redirect
   protected function redirectTo($path, $message = null, $type = 'info')
   {
     if ($message) {
@@ -45,20 +41,25 @@ class BaseController
     exit;
   }
 
-  /**
-   * Helper untuk merender view utama
-   */
+  // Render view
   protected function render($viewPath, $data = [])
   {
     extract($data);
     include '../app/views/' . $viewPath;
   }
 
-  /**
-   * Helper untuk mendapatkan base URL
-   */
+  // Base URL
   protected function baseUrl()
   {
     return BASE_URL ?? "http://localhost/mvc-pbl/public";
+  }
+
+  // JSON Response
+  protected function jsonResponse(array $data, $http_code = 200)
+  {
+    http_response_code($http_code);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
   }
 }

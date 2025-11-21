@@ -19,11 +19,10 @@ class UsersController extends BaseController
     $page_title = 'Manajemen Users';
     $page_breadcrumb = ['Pages', 'Manajemen Users'];
 
-    // $user = $this->userModel->getAllUsers();
-
     include '../app/views/users.php';
   }
 
+  // Get All Users
   public function getList()
   {
     $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -35,40 +34,65 @@ class UsersController extends BaseController
     $data = $this->userModel->getUsers($limit, $offset, $search);
     $total = $this->userModel->countUsers($search);
 
-    header('Content-Type: application/json');
-    echo json_encode([
+    $response_data = [
       'data' => $data,
       'total' => $total,
-    ]);
-    exit;
+    ];
+
+    $this->jsonResponse($response_data);
   }
 
-  // Tambah user baru
+  // ADD New User
   public function create()
   {
     $data = $_POST;
     $success = $this->userModel->insertUser($data);
 
-    echo json_encode(['success' => $success]);
+    $response_data = [
+      'success' => $success,
+      'message' => $success ? 'User berhasil ditambahkan.' : 'Gagal menambahkan user. Cek log error.'
+    ];
+
+    $this->jsonResponse($response_data);
   }
 
-  // Update role/status
+  // Update user (role/status/password)
   public function update()
   {
-    $id = $_POST['id'];
+    $id = $_POST['id_user'];
     $role = $_POST['role'];
-    $password = $_POST['password'];
-    $status = $_POST['status'];
+    $raw_password = $_POST['password'];
+    $is_active = $_POST['is_active'];
 
-    $success = $this->userModel->updateUser($id, $role, $password, $status);
-    echo json_encode(['success' => $success]);
+    $password_hash = null;
+
+    // Cek apakah password diisi/diubah
+    if (!empty($raw_password)) {
+      // Hash password hanya jika ada input
+      $password_hash = password_hash($raw_password, PASSWORD_DEFAULT);
+    }
+
+    $success = $this->userModel->updateUser($id, $role, $is_active, $password_hash);
+
+    $response_data = [
+      'success' => $success,
+      'message' =>  $success ? 'User berhasil diperbarui.' : 'Gagal memperbarui user. Cek log error.'
+    ];
+
+    $this->jsonResponse($response_data);
   }
 
-  // Hapus user
+  // Delete user
   public function delete()
   {
-    $id = $_POST['id'];
+    $id = $_POST['id_user'];
     $success = $this->userModel->deleteUser($id);
-    echo json_encode(['success' => $success]);
+
+    $response_data = [
+      'success' => $success,
+      'message' => $success ? 'User berhasil dihapus.' : 'Gagal menghapus user. Cek log error.'
+    ];
+
+    $this->jsonResponse($response_data);
   }
 }

@@ -10,99 +10,125 @@ class UserModel
     $this->conn = $db->getConnection();
   }
 
+  // Read Data by Email (auth)
   public function getUserByEmail($email)
   {
     $query = "SELECT * FROM users WHERE email = :email LIMIT 1";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':email', $email);
-    $stmt->execute();
-
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindParam(':email', $email);
+      $stmt->execute();
+      return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      echo "DB Error (getUserByEmail): " . $e->getMessage();
+    }
   }
 
-  // public function getAllUsers()
-  // {
-  //   $query = "SELECT u.nama, u.email, u.status, u.foto, u.role,  p.nama_ps FROM users u LEFT JOIN program_studi p ON u.id_ps = p.id_ps ORDER BY id_user;";
-  //   $stmt = $this->conn->prepare($query);
-  //   $stmt->execute();
-
-  //   return $stmt->fetchAll(PDO::FETCH_ASSOC);
-  // }
-
-  // public function updateUser($id_user, $role, $status)
-  // {
-  //   $query = "UPDATE users SET role = :role, status = :status WHERE id_user = :id_user";
-  //   $stmt = $this->conn->prepare($query);
-  //   $stmt->bindParam(':role', $role);
-  //   $stmt->bindParam(':status', $status);
-  //   $stmt->bindParam(':id_user', $id_user);
-  //   return $stmt->execute();
-  // }
-
+  // Read Data Users
   public function getUsers($limit, $offset, $search = '')
   {
-    $query = "SELECT u.id, u.name, u.email, u.status, u.photo, u.role,  p.name FROM users u LEFT JOIN study_programs p ON u.id_ps = p.id_ps";
-    if ($search !== '') {
-      $query .= " WHERE name LIKE :search OR email LIKE :search";
-    }
-    $query .= " ORDER BY id LIMIT :limit OFFSET :offset";
-
-    $stmt = $this->conn->prepare($query);
+    $query = "SELECT u.id, u.name AS name_user, u.email, u.is_active, u.photo, u.role, p.name AS name_ps 
+              FROM users u 
+              LEFT JOIN study_programs p ON u.study_program_id = p.id";
 
     if ($search !== '') {
-      $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+      $query .= " WHERE u.name ILIKE :search OR u.email ILIKE :search";
     }
-    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-    $stmt->execute();
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $query .= " ORDER BY u.id LIMIT :limit OFFSET :offset";
+
+    try {
+      $stmt = $this->conn->prepare($query);
+      if ($search !== '') {
+        $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+      }
+      $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+      $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      echo "DB Error (getUsers): " . $e->getMessage();
+    }
   }
 
+  // Count Users
   public function countUsers($search = '')
   {
-    $query = "SELECT COUNT(*) AS total FROM users";
+    $query = "SELECT COUNT(*) AS total FROM users u";
     if ($search !== '') {
-      $query .= " WHERE nama LIKE :search OR email LIKE :search";
+      $query .= " WHERE u.name LIKE :search OR u.email LIKE :search";
     }
 
-    $stmt = $this->conn->prepare($query);
-    if ($search !== '') {
-      $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+    try {
+      $stmt = $this->conn->prepare($query);
+      if ($search !== '') {
+        $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+      }
+      $stmt->execute();
+      return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    } catch (PDOException $e) {
+      echo "DB Error (countUsers): " . $e->getMessage();
     }
-    $stmt->execute();
-
-    return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
   }
 
+  // Insert New Users
   public function insertUser($data)
   {
-    $query = "INSERT INTO users (nama, email, password, id_ps, role, status)
-                  VALUES (:nama, :email, :password, :id_ps, :role, :status)";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindValue(':nama', $data['nama']);
-    $stmt->bindValue(':email', $data['email']);
-    $stmt->bindValue(':password', password_hash($data['password'], PASSWORD_DEFAULT));
-    $stmt->bindValue(':id_ps', $data['id_ps']);
-    $stmt->bindValue(':role', $data['role']);
-    $stmt->bindValue(':status', $data['status']);
-    return $stmt->execute();
+    $query = "INSERT INTO users (name, email, password, study_program_id, role, is_active)
+              VALUES (:name, :email, :password, :study_program_id, :role, :is_active)";
+
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':name', $data['name']);
+      $stmt->bindValue(':email', $data['email']);
+      $stmt->bindValue(':password', password_hash($data['password'], PASSWORD_DEFAULT));
+      $stmt->bindValue(':study_program_id', $data['study_program_id']);
+      $stmt->bindValue(':role', $data['role']);
+      $stmt->bindValue(':is_active', $data['is_active']);
+      return $stmt->execute();
+    } catch (PDOException $e) {
+      error_log("DB Error (insertUser): " . $e->getMessage());
+      return false;
+    }
   }
 
-  public function updateUser($id, $role, $password, $status)
+  // Update User
+  public function updateUser($id, $role, $is_active, $password_hash = null)
   {
-    $stmt = $this->conn->prepare("UPDATE users SET role = :role, status = :status, password = :password WHERE id_user = :id_user");
-    $stmt->bindValue(':id_user', $id);
-    $stmt->bindValue(':role', $role);
-    $stmt->bindValue(':password', password_hash($password, PASSWORD_DEFAULT));
-    $stmt->bindValue(':status', $status);
-    return $stmt->execute();
+    $query = "UPDATE users SET role = :role, is_active = :is_active";
+
+    if ($password_hash !== null) {
+      $query .= ", password = :password";
+    }
+
+    $query .= " WHERE id = :user_id";
+
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':user_id', $id);
+      $stmt->bindValue(':role', $role);
+      $stmt->bindValue(':is_active', $is_active);
+      if ($password_hash !== null) {
+        $stmt->bindValue(':password', $password_hash);
+      }
+      return $stmt->execute();
+    } catch (PDOException $e) {
+      error_log("DB Error (updateUser): " . $e->getMessage());
+      return false;
+    }
   }
 
+  // Delete User
   public function deleteUser($id)
   {
-    $stmt = $this->conn->prepare("DELETE FROM users WHERE id_user = :id_user");
-    $stmt->bindValue(':id_user', $id);
-    return $stmt->execute();
+    $query = "DELETE FROM users WHERE id = :id_user";
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':id_user', $id);
+      return $stmt->execute();
+    } catch (PDOException $e) {
+      error_log("DB Error (deleteUser): " . $e->getMessage());
+      return false;
+    }
   }
 }

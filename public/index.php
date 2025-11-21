@@ -8,6 +8,8 @@ require_once '../app/controllers/AuthController.php';
 require_once '../app/controllers/ProfileController.php';
 require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/UsersController.php';
+require_once '../app/controllers/FacilitiesController.php';
+require_once '../app/controllers/GalleryController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -66,6 +68,46 @@ switch ($url) {
 
   case 'profile/update-list':
     (new ProfileController())->update_list();
+    break;
+
+  case 'fasilitas':
+    (new FacilitiesController())->index();
+    break;
+
+  case 'fasilitas/list':
+    (new FacilitiesController())->getList();
+    break;
+
+  case 'fasilitas/create':
+    (new FacilitiesController())->create();
+    break;
+
+  case 'fasilitas/update':
+    (new FacilitiesController())->update();
+    break;
+
+  case 'fasilitas/delete':
+    (new FacilitiesController())->delete();
+    break;
+
+  case 'galeri':
+    (new GalleryController())->index();
+    break;
+
+  case 'galeri/list':
+    (new GalleryController())->list();
+    break;
+
+  case 'galeri/create':
+    (new GalleryController())->create();
+    break;
+
+  case 'galeri/update':
+    (new GalleryController())->update();
+    break;
+
+  case 'galeri/delete':
+    (new GalleryController())->delete();
     break;
 
   default:
