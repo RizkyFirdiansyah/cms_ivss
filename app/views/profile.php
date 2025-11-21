@@ -13,7 +13,7 @@
     <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-icons.css" rel="stylesheet" />
     <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/4da45c7bdd.js" crossorigin="anonymous"></script> <!-- Font Awesome itT -->
-    <link id="pagestyle" href="/mvc-pbl/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
+    <link id="pagestyle" href="/cms_ivss/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" /> <!-- CSS Files -->
 </head>
 
 <body class="g-sidenav-show bg-gray-100">
@@ -786,12 +786,12 @@
                 Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
             }
         </script>
-        <script src="/mvc-pbl/public/assets/js/core/popper.min.js"></script>
-        <script script src="/mvc-pbl/public/assets/js/core/bootstrap.min.js"></script>
-        <script src="/mvc-pbl/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
-        <script src="/mvc-pbl/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/core/popper.min.js"></script>
+        <script script src="/cms_ivss/public/assets/js/core/bootstrap.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
+        <script src="/cms_ivss/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
         <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
-        <script src="/mvc-pbl/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+        <script src="/cms_ivss/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
         <!-- Github buttons -->
         <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
