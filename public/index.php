@@ -10,6 +10,7 @@ require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/UsersController.php';
 require_once '../app/controllers/FacilitiesController.php';
 require_once '../app/controllers/GalleryController.php';
+require_once '../app/controllers/PublicationsController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -109,6 +110,28 @@ switch ($url) {
   case 'galeri/delete':
     (new GalleryController())->delete();
     break;
+
+  case 'publikasi':
+    (new PublicationsController())->index();
+    break;
+
+  case 'publikasi/list':
+    (new PublicationsController())->getList();
+    break;
+
+  case 'publikasi/create':
+    (new PublicationsController())->create();
+    break;
+
+  case 'publikasi/update':
+    (new PublicationsController())->update();
+    break;
+
+  case 'publikasi/delete':
+    (new PublicationsController())->delete();
+    break;
+
+  
 
   default:
     echo "404 - Halaman tidak ditemukan";
