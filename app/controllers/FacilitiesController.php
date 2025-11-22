@@ -229,7 +229,6 @@ class FacilitiesController extends BaseController
       }
     }
 
-    // File tidak ada di server atau DB menyimpan NULL/kosong, anggap berhasil
     return true;
   }
 }

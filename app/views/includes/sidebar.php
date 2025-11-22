@@ -35,6 +35,8 @@ $role = $_SESSION['role'] ?? 'guest';
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/kategori"><i class="ni ni-tag"></i> Kategori</a></li>
+
 
       <?php elseif ($role === 'dosen'): ?>
         <!-- MENU KHUSUS DOSEN -->
