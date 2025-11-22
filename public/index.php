@@ -9,6 +9,8 @@ require_once '../app/controllers/ProfileController.php';
 require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/UsersController.php';
 require_once '../app/controllers/FacilitiesController.php';
+require_once '../app/controllers/NewsController.php';
+require_once '../app/controllers/CategoryController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -87,6 +89,53 @@ switch ($url) {
 
   case 'fasilitas/delete':
     (new FacilitiesController())->delete();
+    break;
+
+  case 'berita':
+    (new NewsController())->index();
+    break;
+
+  case 'berita/list':
+    (new NewsController())->getList();
+    break;
+
+  case 'berita/getDetail':
+    (new NewsController())->getDetail();
+
+  case 'berita/create':
+    (new NewsController())->create();
+    break;
+
+  case 'berita/update':
+    (new NewsController())->update();
+    break;
+
+  case  'berita/delete':
+    (new NewsController())->delete();
+    break;
+
+  case 'kategori':
+    (new CategoryController())->index();
+    break;
+
+  case 'kategori/list':
+    (new CategoryController())->getList();
+    break;
+
+  case 'kategori/getAll':
+    (new CategoryController())->getAll();
+    break;
+
+  case 'kategori/create':
+    (new CategoryController())->create();
+    break;
+
+  case 'kategori/update':
+    (new CategoryController())->update();
+    break;
+
+  case 'kategori/delete':
+    (new CategoryController())->delete();
     break;
 
   default:

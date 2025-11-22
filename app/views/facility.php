@@ -166,8 +166,6 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script> <!-- Link Jquery -->
 
-
-
   <script>
     // Global variables
     const BASE_URL = "<?= BASE_URL ?>";
@@ -310,8 +308,7 @@
           showAlert(res.message, res.success ? "success" : "error");
           if (res.success) {
             $("#modal-add-fasilitas").modal("hide");
-            this.reset();
-            loadFacilities(curentPage);
+            loadFacilities(currentPage);
           }
         }
       });

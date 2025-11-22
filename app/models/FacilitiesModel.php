@@ -1,9 +1,8 @@
 <?php
-require_once '../app/config/Database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class FacilitiesModel
 {
-
   private $conn;
 
   public function __construct()
@@ -33,7 +32,8 @@ class FacilitiesModel
       $stmt->execute();
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-      echo "DB Error (getFacility): " . $e->getMessage();
+      error_log("DB Error (getFacility): " . $e->getMessage());
+      return [];
     }
   }
 
@@ -53,27 +53,28 @@ class FacilitiesModel
       $stmt->execute();
       return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     } catch (PDOException $e) {
-      echo "DB Error (countFacility): " . $e->getMessage();
+      error_log("DB Error (countFacility): " . $e->getMessage());
+      return 0;
     }
   }
 
-  // Insert New facility
+  // Insert/Update New facility
   public function saveFacility($data)
   {
     try {
       if (!empty($data["id"])) {
         // UPDATE
         $query = "UPDATE facilities
-                          SET name = :name,
-                              description = :description,
-                              photo = :photo
-                          WHERE id = :id";
+                              SET name = :name,
+                                  description = :description,
+                                  photo = :photo
+                              WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(":id", $data["id"]);
       } else {
         // INSERT
         $query = "INSERT INTO facilities (user_id, name, description, photo)
-                          VALUES (:user_id, :name, :description, :photo)";
+                              VALUES (:user_id, :name, :description, :photo)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(':user_id', $data['user_id'] ?? null, PDO::PARAM_INT);
       }
@@ -91,17 +92,37 @@ class FacilitiesModel
 
   public function getById($id)
   {
-    $stmt = $this->conn->prepare("SELECT * FROM facilities WHERE id = :id LIMIT 1");
-    $stmt->execute([":id" => $id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+      $stmt = $this->conn->prepare("SELECT * FROM facilities WHERE id = :id LIMIT 1");
+      $stmt->execute([":id" => $id]);
+      return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getById): " . $e->getMessage());
+      return null;
+    }
   }
 
-  /* -----------------------------------------
-      DELETE
-    ----------------------------------------- */
+  // Delete Facility
   public function delete($id)
   {
-    $stmt = $this->conn->prepare("DELETE FROM facilities WHERE id = :id");
-    return $stmt->execute([":id" => $id]);
+    try {
+      $stmt = $this->conn->prepare("DELETE FROM facilities WHERE id = :id");
+      return $stmt->execute([":id" => $id]);
+    } catch (PDOException $e) {
+      error_log("DB Error (delete): " . $e->getMessage());
+      return false;
+    }
+  }
+
+  public function getAll()
+  {
+    try {
+      $stmt = $this->conn->prepare("SELECT * FROM facilities ORDER BY id");
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getAll): " . $e->getMessage());
+      return [];
+    }
   }
 }
