@@ -81,6 +81,9 @@ switch ($url) {
     (new FacilitiesController())->getList();
     break;
 
+  case 'fasilitas/getDetail':
+    (new FacilitiesController())->getDetail();
+
   case 'fasilitas/create':
     (new FacilitiesController())->create();
     break;
