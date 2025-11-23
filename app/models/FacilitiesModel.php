@@ -64,17 +64,12 @@ class FacilitiesModel
     try {
       if (!empty($data["id"])) {
         // UPDATE
-        $query = "UPDATE facilities
-                              SET name = :name,
-                                  description = :description,
-                                  photo = :photo
-                              WHERE id = :id";
+        $query = "UPDATE facilities SET name = :name, description = :description, photo = :photo WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(":id", $data["id"]);
       } else {
         // INSERT
-        $query = "INSERT INTO facilities (user_id, name, description, photo)
-                              VALUES (:user_id, :name, :description, :photo)";
+        $query = "INSERT INTO facilities (user_id, name, description, photo) VALUES (:user_id, :name, :description, :photo)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(':user_id', $data['user_id'] ?? null, PDO::PARAM_INT);
       }
@@ -90,10 +85,12 @@ class FacilitiesModel
     }
   }
 
+  // Get single facility by ID 
   public function getById($id)
   {
     try {
-      $stmt = $this->conn->prepare("SELECT * FROM facilities WHERE id = :id LIMIT 1");
+      $query = "SELECT * FROM facilities WHERE id = :id LIMIT 1";
+      $stmt = $this->conn->prepare($query);
       $stmt->execute([":id" => $id]);
       return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -106,7 +103,8 @@ class FacilitiesModel
   public function delete($id)
   {
     try {
-      $stmt = $this->conn->prepare("DELETE FROM facilities WHERE id = :id");
+      $query = "DELETE FROM facilities WHERE id = :id";
+      $stmt = $this->conn->prepare($query);
       return $stmt->execute([":id" => $id]);
     } catch (PDOException $e) {
       error_log("DB Error (delete): " . $e->getMessage());
@@ -114,10 +112,12 @@ class FacilitiesModel
     }
   }
 
+  // Get all (untuk API)
   public function getAll()
   {
     try {
-      $stmt = $this->conn->prepare("SELECT * FROM facilities ORDER BY id");
+      $query = "SELECT * FROM facilities ORDER BY id";
+      $stmt = $this->conn->prepare($query);
       $stmt->execute();
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {

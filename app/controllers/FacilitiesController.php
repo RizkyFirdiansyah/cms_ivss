@@ -75,105 +75,109 @@ class FacilitiesController extends BaseController
   // Update Facility
   public function update()
   {
-    try {
-      $id = $_POST["id"] ?? null;
+    $id = $_POST["id"] ?? null;
 
-      if (!$id) {
-        return $this->jsonResponse(["success" => false, "message" => "ID fasilitas tidak valid."], 400);
-      }
-
-      // 1. Ambil data lama (untuk mendapatkan nama foto lama)
-      $existing = $this->facility->getById($id);
-
-      if (!$existing) {
-        return $this->jsonResponse(["success" => false, "message" => "Fasilitas tidak ditemukan."], 404);
-      }
-
-      $photo_old_name = $existing["photo"]; // Nama foto yang ada di DB
-      $photo_new_name = $photo_old_name;     // Default: tetap menggunakan foto lama
-
-      // 2. Cek apakah ada file baru yang diunggah
-      if (!empty($_FILES["photo"]["name"])) {
-        // A. Upload file baru
-        $photo_new_name = $this->handleFileUpload($_FILES["photo"]);
-
-        if ($photo_new_name === false) {
-          return $this->jsonResponse(["success" => false, "message" => "Gagal mengunggah foto baru. Format tidak didukung."], 400);
-        }
-
-        // B. HAPUS FOTO LAMA dari server
-        if ($photo_old_name && $photo_new_name !== $photo_old_name) {
-          $old_file_path = $this->deleteFileFromServer($photo_old_name);
-          if (file_exists($old_file_path)) {
-            unlink($old_file_path);
-          }
-        }
-      }
-
-      // 3. Simpan data ke database
-      $save = $this->facility->saveFacility([
-        "id" => $id,
-        "name" => $_POST["name"] ?? null,
-        "description" => $_POST["description"] ?? null,
-        "photo" => $photo_new_name // Simpan nama file yang baru/lama
-      ]);
-
-      $this->jsonResponse([
-        "success" => $save,
-        "message" => $save ? "Fasilitas berhasil diperbarui." : "Gagal update fasilitas."
-      ]);
-    } catch (Exception $e) {
-      error_log("Update Fasilitas Exception: " . $e->getMessage());
-      $this->jsonResponse([
-        "success" => false,
-        "message" => "Terjadi kesalahan sistem."
-      ], 500);
+    if (!$id) {
+      return $this->jsonResponse(["success" => false, "message" => "ID fasilitas tidak valid."], 400);
     }
+
+    // Ambil data fasilitas 
+    $existing = $this->facility->getById($id);
+
+    if (!$existing) {
+      return $this->jsonResponse(["success" => false, "message" => "Fasilitas tidak ditemukan."], 404);
+    }
+
+    $photo_old_name = $existing["photo"];
+    $photo_new_name = $photo_old_name;
+
+    // Cek apakah ada file baru yang diunggah
+    if (!empty($_FILES["photo"]["name"])) {
+      $photo_new_name = $this->handleFileUpload($_FILES["photo"]);
+
+      if ($photo_new_name === false) {
+        return $this->jsonResponse([
+          "success" => false,
+          "message" => "Gagal mengunggah foto baru. Format tidak didukung."
+        ], 400);
+      }
+
+      // Hapus foto lama jika ada
+      if ($photo_old_name && $photo_new_name !== $photo_old_name) {
+        $old_file_path = $this->deleteFileFromServer($photo_old_name);
+        if (file_exists($old_file_path)) {
+          unlink($old_file_path);
+        }
+      }
+    }
+
+    // Simpan data ke database
+    $save = $this->facility->saveFacility([
+      "id" => $id,
+      "name" => $_POST["name"] ?? null,
+      "description" => $_POST["description"] ?? null,
+      "photo" => $photo_new_name
+    ]);
+
+    $this->jsonResponse([
+      "success" => $save,
+      "message" => $save ? "Fasilitas berhasil diperbarui." : "Gagal update fasilitas."
+    ]);
   }
 
   // Delete Facility
   public function delete()
   {
-    try {
-      $id = $_POST["id"] ?? null;
+    $id = $_POST["id"] ?? null;
 
-      if (!$id) {
-        return $this->jsonResponse(["success" => false, "message" => "ID fasilitas tidak valid."], 400);
-      }
-
-      // 1. Ambil data fasilitas (untuk mendapatkan nama foto)
-      $existing = $this->facility->getById($id);
-
-      if (!$existing) {
-        return $this->jsonResponse(["success" => false, "message" => "Fasilitas tidak ditemukan."], 404);
-      }
-
-      $photo_name = $existing["photo"];
-
-      // 2. Hapus data dari database
-      $del = $this->facility->delete($id);
-
-      if ($del) {
-        // 3. Hapus file fisik dari server
-        if ($photo_name) {
-          $file_path = $this->deleteFileFromServer($photo_name);
-          if (file_exists($file_path)) {
-            unlink($file_path); // Hapus file!
-          }
-        }
-      }
-
-      $this->jsonResponse([
-        "success" => $del,
-        "message" => $del ? "Fasilitas berhasil dihapus." : "Gagal menghapus fasilitas."
-      ]);
-    } catch (Exception $e) {
-      error_log("Delete Fasilitas Exception: " . $e->getMessage());
-      $this->jsonResponse([
-        "success" => false,
-        "message" => "Terjadi kesalahan sistem."
-      ], 500);
+    if (!$id) {
+      return $this->jsonResponse(["success" => false, "message" => "ID fasilitas tidak valid."], 400);
     }
+
+    // Ambil data fasilitas
+    $existing = $this->facility->getById($id);
+
+    if (!$existing) {
+      return $this->jsonResponse(["success" => false, "message" => "Fasilitas tidak ditemukan."], 404);
+    }
+
+    $photo_name = $existing["photo"];
+
+    // Hapus data dari database
+    $del = $this->facility->delete($id);
+
+    if ($del) {
+      // Hapus foto jika ada
+      if ($photo_name) {
+        $this->deleteFileFromServer($photo_name);
+      }
+    }
+
+    $this->jsonResponse([
+      "success" => $del,
+      "message" => $del ? "Fasilitas berhasil dihapus." : "Gagal menghapus fasilitas."
+    ]);
+  }
+
+  // Get Single Facility by ID 
+  public function getDetail()
+  {
+    $id = $_GET['id'] ?? null;
+
+    if (!$id) {
+      return $this->jsonResponse(["success" => false, "message" => "ID facility tidak valid."], 400);
+    }
+
+    $facility = $this->facility->getById($id);
+
+    if (!$facility) {
+      return $this->jsonResponse(["success" => false, "message" => "Facility tidak ditemukan."], 404);
+    }
+
+    $this->jsonResponse([
+      "success" => true,
+      "data" => $facility
+    ]);
   }
 
   // Helper Functoin

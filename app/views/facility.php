@@ -124,6 +124,39 @@
   </div>
   <!-- End Modal Edit fasilitas -->
 
+  <!-- Modal Detail Fasilitas -->
+  <div class="modal fade" id="modal-detail-facility" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detail Fasilitas</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <img id="detail-preview" class="img-fluid rounded" style="max-height: 300px;">
+          </div>
+          <h4 id="detail-title" class="mb-3"></h4>
+          <div class="mb-3">
+            <strong>Nama:</strong>
+            <span id="detail-name" class="ms-2"></span>
+          </div>
+          <div class="mb-3">
+            <strong>Deskripsi:</strong>
+            <span id="detail-description" class="ms-2"></span>
+          </div>
+          <div class="content-box">
+            <p id="detail-content" class="text-justify"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Modal Detail Fasilitas -->
+
   <!-- Modal Alert -->
   <div class="modal fade" id="modal-alert" tabindex="-1" aria-labelledby="alertLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -229,17 +262,21 @@
               <h6 class="mb-1 fw-bold">${f.name}</h6>
               <p class="text-muted text-xxs mb-3">${shortDescription}</p>
               <div class="d-flex gap-2">
+                <button class="btn mb-0 px-3 btn-info btn-sm text-xs detail-btn"
+                    onclick="showDetailFacility(${f.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
                 <button class="btn mb-0 px-3 btn-secondary btn-sm text-xs edit-btn"
                   onclick="showEditFacility(this)"
                   data-id="${f.id}"
                   data-name="${safeName}"
                   data-description="${safeDescription}"
                   data-photo="${f.photo}">
-                  Edit
+                  <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn mb-0 px-3 btn-danger btn-sm text-xs"
                   onclick="deleteFacility(${f.id})">
-                  Delete
+                  <i class="fas fa-trash"></i>
                 </button>
               </div>
             </div>
@@ -291,6 +328,32 @@
         }
       });
     }
+
+    // Show detail fasilitas
+    window.showDetailFacility = function(id) {
+      $.ajax({
+        url: BASE_URL + "/fasilitas/getDetail",
+        method: "GET",
+        data: {
+          id: id
+        },
+        dataType: "json",
+        success: function(res) {
+          if (res.success) {
+            const facility = res.data;
+            console.log(facility);
+            $('#detail-name').text(facility.name);
+            $('#detail-description').text(facility.description);
+            $('#detail-preview').attr('src', BASE_URL + '/uploads/facility/' + (facility.photo || 'default.jpg'));
+
+            const modal = new bootstrap.Modal($('#modal-detail-facility')[0]);
+            modal.show();
+          } else {
+            showAlert(res.message, "error");
+          }
+        }
+      });
+    };
 
     // Add fasilitas
     $("#form-add-fasilitas").on("submit", function(e) {
