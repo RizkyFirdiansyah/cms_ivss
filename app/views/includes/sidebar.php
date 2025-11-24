@@ -59,6 +59,15 @@ $role = $_SESSION['role'] ?? 'guest';
       </li>
       <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/profile"><i class="ni ni-circle-08"></i> Profile</a></li>
       <li id="logout" class="nav-item"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout"><i class="ni ni-user-run"></i> Logout</a></li>
+
+      <!-- MENU Interface -->
+      <li class="nav-item mt-3">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Interface</h6>
+      </li>
+      <?php if ($role === 'kepala'): ?>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/settings"><i class="ni ni-settings-gear-65"></i> Pengaturan</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/home"><i class="ni ni-tv-2"></i> Beranda</a></li>
+      <?php endif; ?>
       <script>
         const logout = document.querySelector('#logout');
         logout.addEventListener('click', function() {

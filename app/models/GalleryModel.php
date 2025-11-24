@@ -102,4 +102,13 @@ class GalleryModel
     $stmt = $this->conn->prepare("DELETE FROM gallery WHERE id = :id");
     return $stmt->execute([":id" => $id]);
   }
+
+  // get recent gallery
+  public function getRecentGallery($limit = 10)
+  {
+    $stmt = $this->conn->prepare("SELECT * FROM gallery ORDER BY created_at DESC LIMIT :limit");
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
 }

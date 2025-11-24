@@ -13,7 +13,7 @@
   <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-icons.css" rel="stylesheet" />
   <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
   <script src="https://kit.fontawesome.com/4da45c7bdd.js" crossorigin="anonymous"></script>
-  <link id="pagestyle" href="/mvc-pbl/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
+  <link id="pagestyle" href="/cms_ivss/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -431,10 +431,10 @@
   </script>
 
   <!-- Core JS Files -->
-  <script src="/mvc-pbl/public/assets/js/core/popper.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/core/bootstrap.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="/mvc-pbl/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/core/popper.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/core/bootstrap.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="/cms_ivss/public/assets/js/plugins/smooth-scrollbar.min.js"></script>
 
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
@@ -445,7 +445,7 @@
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
   </script>
-  <script src="/mvc-pbl/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+  <script src="/cms_ivss/public/assets/js/argon-dashboard.min.js?v=2.1.0"></script>
 </body>
 
 </html>
