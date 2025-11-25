@@ -42,6 +42,10 @@ $page_breadcrumb = ["Pages", "Publikasi"];
                 <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
                 <input type="text" class="form-control" placeholder="Cari publikasi..." id="searchPublication">
               </div>
+              <select class="form-select w-25" id="categoryFilter">
+                <option value="">Semua Kategori</option>
+                <!-- Categories will be populated by JavaScript -->
+              </select>
               <button class="btn btn-sm btn-success m-0 p-0 w-25" id="btn-add-publication" data-bs-toggle="modal" data-bs-target="#modal-add-publication">
                 <i class="fa fa-plus"></i> Tambah Publikasi
               </button>
@@ -52,14 +56,15 @@ $page_breadcrumb = ["Pages", "Publikasi"];
                   <tr>
                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Judul Publikasi</th>
                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Link/File</th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kategori</th>
+                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Link</th>
                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Terakhir Diupdate</th>
                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
                   </tr>
                 </thead>
                 <tbody id="publicationTableBody">
                   <tr>
-                    <td colspan="5" class="text-center text-muted">Memuat data...</td>
+                    <td colspan="6" class="text-center text-muted">Memuat data...</td>
                   </tr>
                 </tbody>
               </table>
@@ -72,81 +77,96 @@ $page_breadcrumb = ["Pages", "Publikasi"];
     <!-- End Publications -->
   </main>
 
-<!-- Modal: Tambah Publikasi -->
-<div class="modal fade" id="modal-add-publication" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-md">
-    <form id="form-add-publication" class="modal-content" enctype="multipart/form-data">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Publikasi</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="add-publication-alert"></div>
-        <div class="mb-3">
-          <label class="form-label">Judul Publikasi</label>
-          <input name="title" type="text" class="form-control" required>
+  <!-- Modal: Tambah Publikasi -->
+  <div class="modal fade" id="modal-add-publication" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <form id="form-add-publication" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Tambah Publikasi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Tahun Publikasi</label>
-              <input name="publication_year" type="number" class="form-control" min="1900" max="2030" required>
+        <div class="modal-body">
+          <div id="add-publication-alert"></div>
+          <div class="mb-3">
+            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
+            <input name="title" type="text" class="form-control" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
+                <input name="publication_year" type="number" class="form-control" min="1900" max="2030" value="<?= date('Y') ?>" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
+                <input name="link" type="url" class="form-control" placeholder="https://example.com" required>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Link Publikasi</label>
-              <input name="link" type="url" class="form-control" placeholder="https://example.com" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Kategori</label>
+            <select name="categories[]" class="form-select" multiple id="categories-select-add" style="height: 120px;">
+              <!-- Categories will be populated by JavaScript -->
+            </select>
+            <small class="text-muted">Tahan Ctrl/Cmd untuk memilih multiple kategori</small>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
-        <button type="submit" class="btn bg-gradient-primary">Simpan</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn bg-gradient-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- Modal: Edit Publikasi -->
-<div class="modal fade" id="modal-edit-publication" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-md">
-    <form id="form-edit-publication" class="modal-content" enctype="multipart/form-data">
-      <input type="hidden" name="id" id="edit-id">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Publikasi</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="edit-publication-alert"></div>
-        <div class="mb-3">
-          <label class="form-label">Judul Publikasi</label>
-          <input name="title" id="edit-title" type="text" class="form-control" required>
+  <!-- Modal: Edit Publikasi -->
+  <div class="modal fade" id="modal-edit-publication" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <form id="form-edit-publication" class="modal-content">
+        <input type="hidden" name="id" id="edit-id">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Publikasi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Tahun Publikasi</label>
-              <input name="publication_year" id="edit-publication_year" type="number" class="form-control" min="1900" max="2030" required>
+        <div class="modal-body">
+          <div id="edit-publication-alert"></div>
+          <div class="mb-3">
+            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
+            <input name="title" id="edit-title" type="text" class="form-control" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
+                <input name="publication_year" id="edit-publication_year" type="number" class="form-control" min="1900" max="2030" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
+                <input name="link" id="edit-link" type="url" class="form-control" placeholder="https://example.com" required>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Link Publikasi</label>
-              <input name="link" id="edit-link" type="url" class="form-control" placeholder="https://example.com" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Kategori</label>
+            <select name="categories[]" class="form-select" multiple id="categories-select-edit" style="height: 120px;">
+              <!-- Categories will be populated by JavaScript -->
+            </select>
+            <small class="text-muted">Tahan Ctrl/Cmd untuk memilih multiple kategori</small>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
-        <button type="submit" class="btn bg-gradient-primary">Simpan Perubahan</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn bg-gradient-primary">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
-  <!-- Modal Alert & Konfirmasi (sama seperti di users.php) -->
+
+  <!-- Modal Alert & Konfirmasi -->
   <div class="modal fade" id="modal-alert" tabindex="-1" aria-labelledby="alertLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0 shadow-lg">
@@ -190,8 +210,9 @@ $page_breadcrumb = ["Pages", "Publikasi"];
     const BASE_URL = "<?= BASE_URL ?>";
     const DEFAULT_LIMIT = 5;
     let currentPage = 1;
+    let categories = [];
 
-    // Helper functions (sama seperti di users.php)
+    // Helper functions
     function showAlert(message, type = 'info') {
       const icons = {
         success: 'fa-check-circle text-success',
@@ -219,15 +240,68 @@ $page_breadcrumb = ["Pages", "Publikasi"];
       modal.show();
     }
 
+    // Load categories
+    function loadCategories() {
+      $.ajax({
+        url: BASE_URL + '/publikasi/categories',
+        method: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res.success && res.data) {
+            categories = res.data;
+
+            // Populate category filter
+            const categoryFilter = $('#categoryFilter');
+            categoryFilter.empty();
+            categoryFilter.append('<option value="">Semua Kategori</option>');
+            categories.forEach(cat => {
+              categoryFilter.append(`<option value="${cat.id}">${cat.name}</option>`);
+            });
+
+            // Populate categories select in add modal
+            const categoriesSelectAdd = $('#categories-select-add');
+            categoriesSelectAdd.empty();
+            categories.forEach(cat => {
+              categoriesSelectAdd.append(`<option value="${cat.id}">${cat.name}</option>`);
+            });
+
+            // Populate categories select in edit modal
+            const categoriesSelectEdit = $('#categories-select-edit');
+            categoriesSelectEdit.empty();
+            categories.forEach(cat => {
+              categoriesSelectEdit.append(`<option value="${cat.id}">${cat.name}</option>`);
+            });
+          }
+        },
+        error: function(xhr) {
+          console.error('Error loading categories:', xhr);
+          showAlert('Gagal memuat data kategori', 'error');
+        }
+      });
+    }
 
     // Render publication row
     function renderPublicationRow(pub) {
-      const isUrl = pub.link && (pub.link.startsWith('http') || pub.link.includes('://'));
-      const linkDisplay = isUrl ? 
-        `<a href="${pub.link}" target="_blank" class=" bg-gradient-info text-white px-3 py-1 rounded text-sm">Link</a>` :
-        `<span class="text-success">File Terlampir</span>`;
-      
-      const lastUpdated = new Date(pub.last_updated).toLocaleDateString('id-ID');
+      console.log('Rendering publication:', pub);
+
+      const categoriesHtml = pub.categories && pub.categories !== '' ?
+        pub.categories.split(', ').map(cat =>
+          `<span class="badge bg-gradient-info text-white me-1 mb-1 px-2 py-1">${cat}</span>`
+        ).join('') :
+        '<span class="text-muted">-</span>';
+
+      const lastUpdated = pub.last_updated ? new Date(pub.last_updated).toLocaleDateString('id-ID') : '-';
+
+      // Pastikan category_ids adalah array
+      const categoryIds = Array.isArray(pub.category_ids) ? pub.category_ids : [];
+      const categoryIdsString = categoryIds.join(',');
+
+      console.log('Publication category data:', {
+        id: pub.id,
+        categories: pub.categories,
+        categoryIds: categoryIds,
+        categoryIdsString: categoryIdsString
+      });
 
       return `
         <tr>
@@ -236,28 +310,42 @@ $page_breadcrumb = ["Pages", "Publikasi"];
               <h6 class="mb-0 text-sm">${pub.title}</h6>
             </div>
           </td>
-          <td class="text-center text-sm">${pub.publication_year}</td>
-        <td class="text-center text-sm"><a href="${pub.link}" target="_blank" class=" bg-gradient-info text-white px-3 py-1 rounded text-sm">Link</a></td>
-          <td class="text-center text-sm">${lastUpdated}</td>
-          <td class="text-center">
-          
-            <button class="btn btn-sm btn-secondary me-1" onclick="showEditPublication(this)"
+          <td class="text-center text-sm align-middle">${pub.publication_year}</td>
+          <td class="text-center align-middle">
+            <div class="d-flex flex-wrap justify-content-center">
+              ${categoriesHtml}
+            </div>
+          </td>
+          <td class="text-center align-middle">
+            <a href="${pub.link}" target="_blank" class="btn btn-sm bg-warning text-white px-3">
+              <i class="fa fa-external-link me-1"></i>Link
+            </a>
+          </td>
+          <td class="text-center text-sm align-middle">${lastUpdated}</td>
+          <td class="text-center align-middle">
+            <button class="btn btn-xs btn-secondary me-1" 
+              onclick="showEditPublication(this)"
               data-id="${pub.id}"
-                  data-title="${pub.title}"
-                  data-link="${pub.link}"
-                  data-year="${pub.publication_year}"
-            >Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deletePublication(${pub.id})">Delete</button>
+              data-title="${pub.title ? pub.title.replace(/"/g, '&quot;') : ''}"
+              data-link="${pub.link || ''}"
+              data-year="${pub.publication_year}"
+              data-categories="${categoryIdsString}">
+              <i class="fa fa-edit me-1"></i>
+            </button>
+            <button class="btn btn-xs btn-danger" 
+              onclick="deletePublication(${pub.id})">
+              <i class="fa fa-trash me-1"></i>
+            </button>
           </td>
         </tr>
       `;
     }
 
     // Load publications
-    function loadPublications(page = 1, search = '', limit = DEFAULT_LIMIT) {
+    function loadPublications(page = 1, search = '', category_id = '', limit = DEFAULT_LIMIT) {
       const tbody = $('#publicationTableBody');
       const pagination = $('#pagination');
-      tbody.html(`<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>`);
+      tbody.html(`<tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr>`);
       pagination.empty();
 
       $.ajax({
@@ -267,12 +355,13 @@ $page_breadcrumb = ["Pages", "Publikasi"];
         data: {
           page: page,
           limit: limit,
-          search: search
+          search: search,
+          category_id: category_id
         },
         success: function(res) {
           tbody.empty();
-          if (!res || !res.data || res.data.length === 0) {
-            tbody.append(`<tr><td colspan="5" class="text-center text-muted">Tidak ada data publikasi.</td></tr>`);
+          if (!res || !res.success || !res.data || res.data.length === 0) {
+            tbody.append(`<tr><td colspan="6" class="text-center text-muted">Tidak ada data publikasi.</td></tr>`);
             return;
           }
 
@@ -283,59 +372,193 @@ $page_breadcrumb = ["Pages", "Publikasi"];
           let html = '';
           for (let i = 1; i <= totalPages; i++) {
             const cls = (i === page) ? 'btn-primary' : 'btn-outline-primary';
-            html += `<button class="btn btn-sm px-3 py-2 ${cls} mx-1" onclick="loadPublications(${i}, '${encodeURIComponent(search)}', ${limit})">${i}</button>`;
+            html += `<button class="btn btn-sm px-3 py-2 ${cls} mx-1" onclick="loadPublications(${i}, '${encodeURIComponent(search)}', '${category_id}', ${limit})">${i}</button>`;
           }
           pagination.html(html);
           currentPage = page;
         },
         error: function(xhr, status, err) {
           console.error('Error loading publications:', status, err);
-          tbody.html(`<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>`);
+          tbody.html(`<tr><td colspan="6" class="text-center text-danger">Gagal memuat data.</td></tr>`);
         }
       });
     }
 
-    // Show edit publication - tanpa AJAX get
-window.showEditPublication = function(el) {
-  const $el = $(el);
-  console.log('Edit button clicked:', $el);
-  
-  const id = $el.data('id');
-  const title = $el.data('title');
-  const publication_year = $el.data('year');
-  const link = $el.data('link');
+    // Show edit publication - DENGAN DEBUGGING
+    window.showEditPublication = function(el) {
+      console.log('=== DEBUG EDIT BUTTON ===');
+      const $el = $(el);
 
-  console.log('Editing publication item:', { id, title, publication_year, link });
+      // Debug: lihat semua data attributes
+      console.log('Button element:', $el);
+      console.log('All data attributes:', $el.data());
 
-  $('#edit-id').val(id);
-  $('#edit-title').val(title);
-  $('#edit-publication_year').val(publication_year);
-  $('#edit-link').val(link);
-  
-  // Reset file input
-  $('#form-edit-publication input[type="file"]').val('');
+      const id = $el.data('id');
+      const title = $el.data('title');
+      const publication_year = $el.data('year');
+      const link = $el.data('link');
+      const categories = $el.data('categories');
 
-  const modal = new bootstrap.Modal($('#modal-edit-publication')[0]);
-  modal.show();
-};
+      console.log('Raw data:', {
+        id,
+        title,
+        publication_year,
+        link,
+        categories
+      });
+
+      // Pastikan nilai tidak undefined
+      if (!id) {
+        console.error('❌ ERROR: ID tidak ditemukan!');
+        showAlert('Error: ID publikasi tidak valid', 'error');
+        return;
+      }
+
+      // Set values ke form edit
+      $('#edit-id').val(id || '');
+      $('#edit-title').val(title || '');
+      $('#edit-publication_year').val(publication_year || '');
+      $('#edit-link').val(link || '');
+
+      // Debug categories
+      console.log('Categories raw:', categories);
+      console.log('Categories type:', typeof categories);
+
+      // Process categories
+      let categoryIds = [];
+      if (categories) {
+        if (typeof categories === 'string') {
+          categoryIds = categories.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        } else if (Array.isArray(categories)) {
+          categoryIds = categories.map(id => parseInt(id)).filter(id => !isNaN(id));
+        }
+      }
+
+      console.log('Processed category IDs:', categoryIds);
+
+      // Set selected categories
+      if (categoryIds.length > 0) {
+        $('#categories-select-edit').val(categoryIds);
+        console.log('✅ Categories set successfully:', categoryIds);
+      } else {
+        $('#categories-select-edit').val([]);
+        console.log('ℹ️ No categories selected');
+      }
+
+      // Show modal
+      const modalElement = document.getElementById('modal-edit-publication');
+      if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        console.log('✅ Modal shown successfully');
+      } else {
+        console.error('❌ ERROR: Modal element tidak ditemukan!');
+      }
+
+      console.log('=== END DEBUG ===');
+    };
+
+    // Render publication row - DENGAN DEBUGGING
+    function renderPublicationRow(pub) {
+      console.log('Rendering publication:', pub);
+
+      const categoriesHtml = pub.categories && pub.categories !== '' ?
+        pub.categories.split(', ').map(cat =>
+          `<span class="badge bg-gradient-info me-1 mb-1">${cat}</span>`
+        ).join('') :
+        '<span class="text-muted">-</span>';
+
+      const lastUpdated = pub.last_updated ? new Date(pub.last_updated).toLocaleDateString('id-ID') : '-';
+
+      // Pastikan category_ids adalah array
+      const categoryIds = Array.isArray(pub.category_ids) ? pub.category_ids : [];
+      const categoryIdsString = categoryIds.join(',');
+
+      console.log('Publication category data:', {
+        id: pub.id,
+        categories: pub.categories,
+        categoryIds: categoryIds,
+        categoryIdsString: categoryIdsString
+      });
+
+      return `
+        <tr>
+          <td>
+            <div class="d-flex flex-column justify-content-center">
+              <h6 class="mb-0 text-sm">${pub.title}</h6>
+            </div>
+          </td>
+          <td class="text-center text-sm align-middle">${pub.publication_year}</td>
+          <td class="text-center align-middle">
+            <div class="d-flex flex-wrap justify-content-center">
+              ${categoriesHtml}
+            </div>
+          </td>
+          <td class="text-center align-middle">
+            <a href="${pub.link}" target="_blank" class="btn btn-sm bg-gradient-warning text-white px-3">
+              <i class="fa fa-external-link me-1"></i>Link
+            </a>
+          </td>
+          <td class="text-center text-sm align-middle">${lastUpdated}</td>
+          <td class="text-center align-middle">
+            <button class="btn btn-xs btn-secondary me-1" 
+              onclick="showEditPublication(this)"
+              data-id="${pub.id}"
+              data-title="${pub.title ? pub.title.replace(/"/g, '&quot;') : ''}"
+              data-link="${pub.link || ''}"
+              data-year="${pub.publication_year}"
+              data-categories="${categoryIdsString}">
+              <i class="fa fa-edit me-1"></i>
+            </button>
+            <button class="btn btn-xs btn-danger" 
+              onclick="deletePublication(${pub.id})">
+              <i class="fa fa-trash me-1"></i>
+            </button>
+          </td>
+        </tr>
+          `;
+    }
+    // Delete publication
+    window.deletePublication = function(id) {
+      console.log('Deleting publication ID:', id);
+      showConfirm("Yakin ingin menghapus publikasi ini?", function(ok) {
+        if (!ok) return;
+
+        $.ajax({
+          url: BASE_URL + "/publikasi/delete",
+          method: "POST",
+          data: {
+            id: id
+          },
+          dataType: "json",
+          success: function(res) {
+            showAlert(res.message, res.success ? "success" : "error");
+            if (res.success) loadPublications(currentPage);
+          },
+          error: function(xhr, status, error) {
+            console.error('Error deleting publication:', error);
+            showAlert('Terjadi kesalahan saat menghapus publikasi', 'error');
+          }
+        });
+      });
+    };
 
     // Add publication
     $("#form-add-publication").on("submit", function(e) {
       e.preventDefault();
-      const fd = new FormData(this);
-      
+      const formData = $(this).serialize();
+
       $.ajax({
         url: BASE_URL + "/publikasi/create",
         method: "POST",
-        data: fd,
-        contentType: false,
-        processData: false,
+        data: formData,
         dataType: "json",
         success: function(res) {
           showAlert(res.message, res.success ? "success" : "error");
           if (res.success) {
             $("#modal-add-publication").modal("hide");
             $("#form-add-publication")[0].reset();
+            $('#categories-select-add').val([]);
             loadPublications(currentPage);
           }
         },
@@ -349,19 +572,12 @@ window.showEditPublication = function(el) {
     // Update publication
     $("#form-edit-publication").on("submit", function(e) {
       e.preventDefault();
-      const fd = new FormData(this);
-      
-      // Jika memilih URL, hapus file input
-      if ($('#link-type-edit').val() === 'url') {
-        fd.delete('link');
-      }
+      const formData = $(this).serialize();
 
       $.ajax({
         url: BASE_URL + "/publikasi/update",
         method: "POST",
-        data: fd,
-        contentType: false,
-        processData: false,
+        data: formData,
         dataType: "json",
         success: function(res) {
           showAlert(res.message, res.success ? "success" : "error");
@@ -377,49 +593,63 @@ window.showEditPublication = function(el) {
       });
     });
 
-    // Delete publication
-    function deletePublication(id) {
-      showConfirm("Yakin ingin menghapus publikasi ini?", function(ok) {
-        if (!ok) return;
-
-        $.ajax({
-          url: BASE_URL + "/publikasi/delete",
-          method: "POST",
-          data: { id: id },
-          dataType: "json",
-          success: function(res) {
-            showAlert(res.message, res.success ? "success" : "error");
-            if (res.success) loadPublications(currentPage);
-          },
-          error: function(xhr, status, error) {
-            console.error('Error deleting publication:', error);
-            showAlert('Terjadi kesalahan saat menghapus publikasi', 'error');
-          }
-        });
-      });
-    }
-
     // Search
     let _searchTimeout = null;
     $('#searchPublication').on('keyup', function() {
       clearTimeout(_searchTimeout);
       const q = $(this).val();
       _searchTimeout = setTimeout(() => {
-        loadPublications(1, q, DEFAULT_LIMIT);
+        loadPublications(1, q, $('#categoryFilter').val(), DEFAULT_LIMIT);
       }, 300);
     });
 
-    // Init
+    // Category filter change
+    $('#categoryFilter').change(function() {
+      const categoryId = $(this).val();
+      loadPublications(1, $('#searchPublication').val(), categoryId, DEFAULT_LIMIT);
+    });
+
+    // Reset add modal when closed
+    $('#modal-add-publication').on('hidden.bs.modal', function() {
+      $('#form-add-publication')[0].reset();
+      $('#categories-select-add').val([]);
+    });
+
+    // Init dengan testing
     $(document).ready(function() {
-      loadPublications(1, '', DEFAULT_LIMIT);
-      
-      // safety: ensure modals exist
-      if (!document.getElementById('modal-alert')) {
-        console.warn('Element #modal-alert tidak ditemukan. showAlert() membutuhkan modal ini.');
-      }
-      if (!document.getElementById('modal-confirm')) {
-        console.warn('Element #modal-confirm tidak ditemukan. showConfirm() membutuhkan modal ini.');
-      }
+      console.log('🚀 Publications page loaded');
+
+      loadCategories();
+      loadPublications(1, '', '', DEFAULT_LIMIT);
+
+      // Test function untuk debug
+      window.testMultipleCategories = function() {
+        console.log('🧪 Testing multiple categories...');
+
+        // Test data dengan multiple categories
+        const testData = {
+          id: 999,
+          title: 'Test Publication Multiple Categories',
+          publication_year: 2024,
+          link: 'https://example.com',
+          categories: 'Research, Technology, Education', // Multiple categories
+          category_ids: [1, 2, 3] // Multiple category IDs
+        };
+
+        // Test render function
+        const testRow = renderPublicationRow(testData);
+        console.log('Test render result:', testRow);
+
+        // Test edit function
+        const testBtn = $('<button>')
+          .attr('data-id', testData.id)
+          .attr('data-title', testData.title)
+          .attr('data-year', testData.publication_year)
+          .attr('data-link', testData.link)
+          .attr('data-categories', testData.category_ids.join(','));
+
+        showEditPublication(testBtn[0]);
+      };
     });
   </script>
 

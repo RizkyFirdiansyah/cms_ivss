@@ -83,6 +83,7 @@ switch ($url) {
 
   case 'fasilitas/getDetail':
     (new FacilitiesController())->getDetail();
+    break;
 
   case 'fasilitas/create':
     (new FacilitiesController())->create();
@@ -170,6 +171,10 @@ switch ($url) {
     (new PublicationsController())->getList();
     break;
 
+  case 'publikasi/categories':
+    (new PublicationsController())->getCategories();
+    break;
+
   case 'publikasi/create':
     (new PublicationsController())->create();
     break;
@@ -181,8 +186,7 @@ switch ($url) {
   case 'publikasi/delete':
     (new PublicationsController())->delete();
     break;
-
-
+  
   default:
     echo "404 - Halaman tidak ditemukan";
     break;
