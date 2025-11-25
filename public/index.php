@@ -13,6 +13,11 @@ require_once '../app/controllers/NewsController.php';
 require_once '../app/controllers/CategoryController.php';
 require_once '../app/controllers/GalleryController.php';
 require_once '../app/controllers/PublicationsController.php';
+require_once '../app/controllers/SettingsController.php';
+require_once '../app/controllers/HomePageController.php';
+require_once '../app/controllers/AboutPageController.php';
+require_once '../app/controllers/MemberPageController.php';
+require_once '../app/controllers/FacilityPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -182,6 +187,84 @@ switch ($url) {
     (new PublicationsController())->delete();
     break;
 
+  case 'settings':
+    (new SettingsController())->index();
+    break;
+
+  case 'settings/read':
+    (new SettingsController())->getAll();
+    break;
+
+  case 'settings/update':
+    (new SettingsController())->update();
+    break;
+
+  case 'home':
+    (new HomePageController())->index();
+    break;
+
+  case 'home/read':
+    (new HomePageController())->getContents();
+    break;
+
+  case 'home/update':
+    (new HomePageController())->update();
+    break;
+
+  case 'home/gallery':
+    (new HomePageController())->getGalleryImages();
+    break;
+
+  case 'home/activities-preview':
+    (new HomePageController())->getActivitiesPreview();
+    break;
+
+  case 'about':
+    (new AboutPageController())->index();
+    break;
+
+  case 'about/read':
+    (new AboutPageController())->getContents();
+    break;
+
+  case 'about/update':
+    (new AboutPageController())->update();
+    break;
+
+  case 'about/gallery':
+    (new AboutPageController())->getGalleryImages();
+    break;
+
+  case 'member':
+    (new MemberPageController())->index();
+    break;
+
+  case 'member/read':
+    (new MemberPageController())->getContents();
+    break;
+
+  case 'member/active-members':
+    (new MemberPageController())->getActiveMembers();
+    break;
+
+  case 'member/update':
+    (new MemberPageController())->update();
+    break;
+
+  case 'fasilitas-page':
+    (new FacilityPageController())->index();
+    break;
+
+  case 'fasilitas-page/read':
+    (new FacilityPageController())->getContents();
+    break;
+
+  case 'fasilitas-page/allFasilitas':
+    (new FacilityPageController())->getAllFacilities();
+    break;
+
+  case 'fasilitas-page/update':
+    (new FacilityPageController())->update();
 
   default:
     echo "404 - Halaman tidak ditemukan";

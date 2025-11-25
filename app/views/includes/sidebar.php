@@ -26,16 +26,46 @@ $role = $_SESSION['role'] ?? 'guest';
           <span class="nav-link-text">Dashboard</span>
         </a>
       </li>
-
+      <!-- MENU UNTUK KEPALA LAB -->
       <?php if ($role === 'kepala'): ?>
-        <!-- MENU KHUSUS KEPALA LAB -->
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/users"><i class="ni ni-single-02"></i> Manajemen Users</a></li>
+
+        <!-- GROUP: Manajemen Sistem -->
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Manajemen Sistem</h6>
+        </li>
+
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/users"><i class="ni ni-single-02"></i> Users</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/kategori"><i class="ni ni-tag"></i> Kategori</a></li>
+
+
+        <!-- GROUP: Web Profile Management -->
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Interface Manajemen</h6>
+        </li>
+
+        <!-- DROPDOWN INTERFACE -->
+        <li class="nav-item">
+          <a data-bs-toggle="collapse" href="#interfaceMenu" class="nav-link" aria-controls="interfaceMenu" role="button" aria-expanded="false">
+            <i class="ni ni-tv-2"></i>
+            <span class="nav-link-text">Kelola Halaman</span>
+          </a>
+
+          <div class="collapse" id="interfaceMenu">
+            <ul class="nav ms-2">
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/settings"><i class="ni ni-settings-gear-65"></i>Pengaturan Umum</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/home"><i class="ni ni-shop"></i>Halaman Beranda</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/about"><i class="ni ni-single-copy-04"></i>Halaman Tentang Kami</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/member"><i class="ni ni-circle-08"></i>Halaman Member</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas-page"><i class="ni ni-building"></i>Halaman Fasilitas</a></li>
+            </ul>
+          </div>
+        </li>
+
 
 
       <?php elseif ($role === 'dosen'): ?>
