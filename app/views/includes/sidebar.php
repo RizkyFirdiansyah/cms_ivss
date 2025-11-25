@@ -62,6 +62,8 @@ $role = $_SESSION['role'] ?? 'guest';
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/about"><i class="ni ni-single-copy-04"></i>Halaman Tentang Kami</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/member"><i class="ni ni-circle-08"></i>Halaman Member</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas-page"><i class="ni ni-building"></i>Halaman Fasilitas</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/sop-page"><i class="ni ni-building"></i>Halaman SOP</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri-page"><i class="ni ni-building"></i>Halaman Galeri</a></li>
             </ul>
           </div>
         </li>

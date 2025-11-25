@@ -18,6 +18,8 @@ require_once '../app/controllers/HomePageController.php';
 require_once '../app/controllers/AboutPageController.php';
 require_once '../app/controllers/MemberPageController.php';
 require_once '../app/controllers/FacilityPageController.php';
+require_once '../app/controllers/SopPageController.php';
+require_once '../app/controllers/GaleriPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -265,6 +267,29 @@ switch ($url) {
 
   case 'fasilitas-page/update':
     (new FacilityPageController())->update();
+
+  case 'sop-page':
+    (new SopPageController())->index();
+    break;
+
+  case 'sop-page/read':
+    (new SopPageController())->getContents();
+    break;
+
+  case 'sop-page/update':
+    (new SopPageController())->update();
+    break;
+
+  case 'galeri-page':
+    (new GalleryPageController())->index();
+    break;
+
+  case 'galeri-page/read':
+    (new GalleryPageController())->getContents();
+    break;
+
+  case 'galeri-page/update':
+    (new GalleryPageController())->update();
 
   default:
     echo "404 - Halaman tidak ditemukan";
