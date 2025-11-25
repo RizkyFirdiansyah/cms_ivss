@@ -11,6 +11,7 @@ class UsersController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->userModel = new UserModel();
   }

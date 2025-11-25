@@ -8,6 +8,7 @@ class DashboardController extends BaseController
     // Inisialisasi BaseController
     parent::__construct();
     parent::requireLogin();
+    parent::requireRoles(['kepala', 'dosen', 'mahasiswa']);
   }
 
   public function index()

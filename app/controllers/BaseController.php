@@ -29,6 +29,30 @@ class BaseController
     }
   }
 
+  // Validasi satu role
+  protected function requireRole($role)
+  {
+
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== $role) {
+      // header('Location: ' . BASE_URL . '/unauthorized');
+      echo "404 - Halaman tidak ditemukan";
+      exit;
+    }
+  }
+
+  // Validasi beberapa role
+  protected function requireRoles(array $roles)
+  {
+
+    $userRole = $_SESSION['role'] ?? null;
+
+    if (!in_array($userRole, $roles)) {
+      // header('Location: ' . BASE_URL . '/unauthorized');
+      echo "404 - Halaman tidak ditemukan";
+      exit;
+    }
+  }
+
   // Redirect
   protected function redirectTo($path, $message = null, $type = 'info')
   {

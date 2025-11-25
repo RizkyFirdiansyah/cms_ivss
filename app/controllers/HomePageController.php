@@ -1,5 +1,5 @@
 <?php
-require_once '../app/models/HomeModel.php';
+require_once '../app/models/HomePageModel.php';
 require_once '../app/models/GalleryModel.php';
 require_once '../app/controllers/BaseController.php';
 
@@ -12,8 +12,9 @@ class HomePageController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
-    $this->home = new HomeModel();
+    $this->home = new HomePageModel();
     $this->gallery = new GalleryModel();
   }
 

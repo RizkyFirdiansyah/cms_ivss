@@ -14,6 +14,7 @@ class ProfileController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->profileModel = new ProfileModel();
     $this->id_user = $this->user['id'];

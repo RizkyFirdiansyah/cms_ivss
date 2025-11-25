@@ -11,6 +11,7 @@ class FacilitiesController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->facility = new FacilitiesModel();
   }

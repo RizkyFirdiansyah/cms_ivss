@@ -10,6 +10,7 @@ class PublicationsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->publication = new PublicationsModel();
   }
@@ -104,7 +105,7 @@ class PublicationsController extends BaseController
         }
       } elseif (!empty($_POST["link_url"])) {
         $link_new_name = $_POST["link_url"];
-        
+
         // Hapus file lama jika sebelumnya adalah file upload
         if ($link_old_name && !filter_var($link_old_name, FILTER_VALIDATE_URL)) {
           $old_file_path = $this->deleteFileFromServer($link_old_name);
