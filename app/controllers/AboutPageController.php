@@ -1,11 +1,11 @@
 <?php
-require_once '../app/models/HomeModel.php';
+require_once '../app/models/AboutModel.php';
 require_once '../app/models/GalleryModel.php';
 require_once '../app/controllers/BaseController.php';
 
-class HomePageController extends BaseController
+class AboutPageController extends BaseController
 {
-  private $home;
+  private $about;
   private $gallery;
 
   public function __construct()
@@ -13,57 +13,38 @@ class HomePageController extends BaseController
     parent::__construct();
     parent::requireLogin();
 
-    $this->home = new HomeModel();
+    $this->about = new AboutModel();
     $this->gallery = new GalleryModel();
   }
 
   public function index()
   {
-    $page_title = 'Manajemen Home';
-    $page_breadcrumb = ['Pages', 'Home'];
+    $page_title = 'Manajemen Tentang Kami';
+    $page_breadcrumb = ['Pages', 'Tentang Kami'];
 
-    include '../app/views/home-page.php';
+    include '../app/views/about-page.php';
   }
 
-  // Get home contents for editing
+  // Get about contents
   public function getContents()
   {
     try {
-      $contents = $this->home->getHomeContents();
+      $contents = $this->about->getAboutContents();
 
       $this->jsonResponse([
         'success' => true,
         'data' => $contents
       ]);
     } catch (Exception $e) {
-      error_log("Get Home Contents Error: " . $e->getMessage());
+      error_log("Get About Contents Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
-        'message' => 'Gagal mengambil data konten home.'
+        'message' => 'Gagal mengambil data konten tentang kami.'
       ], 500);
     }
   }
 
-  // Get activities preview for home management
-  public function getActivitiesPreview()
-  {
-    try {
-      $activities = $this->home->getActivitiesForHome();
-
-      $this->jsonResponse([
-        'success' => true,
-        'data' => $activities
-      ]);
-    } catch (Exception $e) {
-      error_log("Get Activities Preview Error: " . $e->getMessage());
-      $this->jsonResponse([
-        'success' => false,
-        'message' => 'Gagal mengambil preview kegiatan.'
-      ], 500);
-    }
-  }
-
-  // Update home contents
+  // Update about contents dengan file management yang aman
   public function update()
   {
     $user = $this->user;
@@ -80,31 +61,35 @@ class HomePageController extends BaseController
     $uploadedFiles = $uploadResult['uploadedFiles'];
     $filesToDelete = $uploadResult['filesToDelete'];
 
-    // Prepare content data
+    // Prepare content data 
     $contentData = [];
 
-    // Hero Section
-    if (isset($_POST['hero_title'])) {
-      $contentData['hero_title'] = [
-        'type' => 'text',
-        'value' => trim($_POST['hero_title'])
-      ];
-    }
-
-    if (isset($_POST['hero_subtitle'])) {
-      $contentData['hero_subtitle'] = [
-        'type' => 'text',
-        'value' => trim($_POST['hero_subtitle'])
-      ];
-    }
+    // Header Section
+    $this->addContentIfSet($contentData, 'about_header_title', $_POST['about_header_title'] ?? '');
+    $this->addContentIfSet($contentData, 'about_header_subtitle', $_POST['about_header_subtitle'] ?? '');
 
     // Profile Section
-    if (isset($_POST['profile_description'])) {
-      $contentData['profile_description'] = [
-        'type' => 'textarea',
-        'value' => trim($_POST['profile_description'])
-      ];
+    $this->addContentIfSet($contentData, 'about_profile_description', $_POST['about_profile_description'] ?? '');
+
+    // Vision & Mission Section
+    $this->addContentIfSet($contentData, 'about_vision_title', $_POST['about_vision_title'] ?? '');
+    $this->addContentIfSet($contentData, 'about_vision_content', $_POST['about_vision_content'] ?? '');
+    $this->addContentIfSet($contentData, 'about_mission_title', $_POST['about_mission_title'] ?? '');
+    $this->addContentIfSet($contentData, 'about_mission_content', $_POST['about_mission_content'] ?? '');
+
+    // Activities Section - SAVE AS GLOBAL ACTIVITIES
+    $this->addContentIfSet($contentData, 'activities_title', $_POST['activities_title'] ?? '');
+    $this->addContentIfSet($contentData, 'activities_subtitle', $_POST['activities_subtitle'] ?? '');
+
+    // Activities items - SAVE AS GLOBAL (used by both home and about)
+    for ($i = 1; $i <= 3; $i++) {
+      $this->addContentIfSet($contentData, "activity_{$i}_title", $_POST["activity_{$i}_title"] ?? '');
+      $this->addContentIfSet($contentData, "activity_{$i}_description", $_POST["activity_{$i}_description"] ?? '');
     }
+
+    // Gallery Section
+    $this->addContentIfSet($contentData, 'gallery_title', $_POST['gallery_title'] ?? '');
+    $this->addContentIfSet($contentData, 'gallery_subtitle', $_POST['gallery_subtitle'] ?? '');
 
     // Add uploaded files to content data
     foreach ($uploadedFiles as $key => $filename) {
@@ -117,7 +102,7 @@ class HomePageController extends BaseController
     }
 
     try {
-      $success = $this->home->saveMultipleHomeContents($contentData, $user['id']);
+      $success = $this->about->saveMultipleAboutContents($contentData, $user['id']);
 
       if ($success) {
         // Hapus file lama hanya setelah sukses save ke database
@@ -125,7 +110,7 @@ class HomePageController extends BaseController
 
         $this->jsonResponse([
           'success' => true,
-          'message' => 'Konten home berhasil diperbarui.'
+          'message' => 'Konten tentang kami dan kegiatan berhasil diperbarui.'
         ]);
       } else {
         // Jika gagal save, hapus file yang baru diupload
@@ -133,14 +118,14 @@ class HomePageController extends BaseController
 
         $this->jsonResponse([
           'success' => false,
-          'message' => 'Gagal memperbarui konten home.'
+          'message' => 'Gagal memperbarui konten.'
         ], 500);
       }
     } catch (Exception $e) {
       // Jika ada exception, hapus file yang baru diupload
       $this->rollbackUploadedFiles($uploadedFiles);
 
-      error_log("Update Home Error: " . $e->getMessage());
+      error_log("Update About Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
         'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
@@ -167,46 +152,85 @@ class HomePageController extends BaseController
     }
   }
 
+  // Helper method to add content if set
+  private function addContentIfSet(&$contentData, $key, $value)
+  {
+    if (isset($value)) {
+      $contentData[$key] = [
+        'type' => $this->getContentType($key),
+        'value' => trim($value)
+      ];
+    }
+  }
+
+  // Determine content type based on key
+  private function getContentType($key)
+  {
+    $textareaKeys = [
+      'about_profile_description',
+      'about_vision_content',
+      'about_mission_content',
+      'activity_1_description',
+      'activity_2_description',
+      'activity_3_description'
+    ];
+
+    return in_array($key, $textareaKeys) ? 'textarea' : 'text';
+  }
+
   // Handle file uploads dengan management file lama yang aman
   private function handleFileUploads()
   {
     $uploadedFiles = [];
     $filesToDelete = [];
 
-    // Get current home contents to check existing images
-    $currentContents = $this->home->getHomeContents();
-
-    // Hero image
-    if (!empty($_FILES['hero_image']['name'])) {
-      $heroImage = $this->handleFileUpload($_FILES['hero_image'], 'hero');
-      if ($heroImage !== false) {
-        $uploadedFiles['hero_image'] = $heroImage;
+    // Header image
+    if (!empty($_FILES['about_header_image']['name'])) {
+      $headerImage = $this->handleFileUpload($_FILES['about_header_image'], 'about_header');
+      if ($headerImage !== false) {
+        $uploadedFiles['about_header_image'] = $headerImage;
 
         // Simpan info file lama untuk dihapus nanti setelah sukses save
-        $oldImage = $_POST['old_hero_image'] ?? ($currentContents['hero_image']['value'] ?? '');
-        if (!empty($oldImage)) {
+        $oldHeaderImage = $this->about->getAboutContent('about_header_image');
+        if ($oldHeaderImage) {
           $filesToDelete[] = [
-            'path' => $oldImage,
-            'type' => 'hero_image'
+            'path' => $oldHeaderImage,
+            'type' => 'about_header'
           ];
         }
       }
     }
 
-    // Profile images
+    // Profile image
+    if (!empty($_FILES['about_profile_image']['name'])) {
+      $profileImage = $this->handleFileUpload($_FILES['about_profile_image'], 'about_profile');
+      if ($profileImage !== false) {
+        $uploadedFiles['about_profile_image'] = $profileImage;
+
+        // Simpan info file lama untuk dihapus nanti setelah sukses save
+        $oldProfileImage = $this->about->getAboutContent('about_profile_image');
+        if ($oldProfileImage) {
+          $filesToDelete[] = [
+            'path' => $oldProfileImage,
+            'type' => 'about_profile'
+          ];
+        }
+      }
+    }
+
+    // Activity images
     for ($i = 1; $i <= 3; $i++) {
-      $fieldName = "profile_image_{$i}";
-      if (!empty($_FILES[$fieldName]['name'])) {
-        $profileImage = $this->handleFileUpload($_FILES[$fieldName], "profile_{$i}");
-        if ($profileImage !== false) {
-          $uploadedFiles[$fieldName] = $profileImage;
+      if (!empty($_FILES["activity_{$i}_image"]['name'])) {
+        $activityImage = $this->handleFileUpload($_FILES["activity_{$i}_image"], "activity_{$i}");
+        if ($activityImage !== false) {
+          $uploadedFiles["activity_{$i}_image"] = $activityImage;
 
           // Simpan info file lama untuk dihapus nanti setelah sukses save
-          $oldImage = $_POST["old_{$fieldName}"] ?? ($currentContents[$fieldName]['value'] ?? '');
-          if (!empty($oldImage)) {
+          $oldActivityImage = $this->about->getAboutContent("activity_{$i}_image");
+          if ($oldActivityImage) {
             $filesToDelete[] = [
-              'path' => $oldImage,
-              'type' => $fieldName
+              'path' => $oldActivityImage,
+              'type' => "activity_{$i}"
             ];
           }
         }
@@ -219,10 +243,10 @@ class HomePageController extends BaseController
     ];
   }
 
-  // Handle single file upload
+  // Handle single file upload - TAMBAHKAN PARAMETER $prefix
   private function handleFileUpload($file, $prefix = '')
   {
-    $upload_dir = 'uploads/home/';
+    $upload_dir = 'uploads/about/';
     $upload_path_full = __DIR__ . '/../../public/' . $upload_dir;
 
     // Pastikan folder ada
@@ -233,7 +257,6 @@ class HomePageController extends BaseController
     $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    // Validate file type
     if (!in_array($ext, $allowed_types)) {
       error_log("Invalid file type for {$prefix}: {$ext}");
       return false;
@@ -245,7 +268,7 @@ class HomePageController extends BaseController
       return false;
     }
 
-    // Generate unique filename
+    // Generate unique filename dengan prefix
     $new_file_name = $prefix . '_' . $this->user['id'] . '_' . time() . '.' . $ext;
     $target_path = $upload_path_full . $new_file_name;
 
@@ -275,7 +298,7 @@ class HomePageController extends BaseController
     }
   }
 
-  // Delete file from server
+  // Delete file from server - PERBAIKI PATH HANDLING
   private function deleteFileFromServer($filename, $type = 'general')
   {
     if (empty($filename)) {
@@ -284,7 +307,7 @@ class HomePageController extends BaseController
     }
 
     // Tambahkan path directory karena hanya menyimpan nama file
-    $file_path = 'uploads/home/' . $filename;
+    $file_path = 'uploads/about/' . $filename;
     $full_path = __DIR__ . '/../../public/' . $file_path;
 
     error_log("Delete File Attempt: {$type}");
@@ -313,7 +336,7 @@ class HomePageController extends BaseController
       error_log("Directory exists: " . (is_dir($dir) ? 'Yes' : 'No'));
 
       // Coba cari file dengan path alternatif
-      $alternative_path = __DIR__ . '/../../public/uploads/home/' . $filename;
+      $alternative_path = __DIR__ . '/../../public/uploads/about/' . $filename;
       if (file_exists($alternative_path)) {
         error_log("File ditemukan di path alternatif: " . $alternative_path);
         if (unlink($alternative_path)) {

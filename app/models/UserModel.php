@@ -24,6 +24,19 @@ class UserModel
     }
   }
 
+  // Get All
+  public function getAllUsers()
+  {
+    $query = "SELECT * FROM users";
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      echo "DB Error (getAllUsers): " . $e->getMessage();
+    }
+  }
+
   // Read Data Users
   public function getUsers($limit, $offset, $search = '')
   {

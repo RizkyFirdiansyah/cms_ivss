@@ -81,8 +81,10 @@ class SettingsController extends BaseController
       ], 405);
     }
 
-    // Handle file uploads first
-    $uploadedFiles = $this->handleFileUploads();
+    // Handle file uploads first - dapatkan file baru dan info file lama
+    $uploadResult = $this->handleFileUploads();
+    $uploadedFiles = $uploadResult['uploadedFiles'];
+    $filesToDelete = $uploadResult['filesToDelete'];
 
     // Prepare settings data
     $settingsData = [];
@@ -190,17 +192,26 @@ class SettingsController extends BaseController
       $success = $this->settings->updateSettings($settingsData, $user['id']);
 
       if ($success) {
+        // Hapus file lama hanya setelah sukses save ke database
+        $this->deleteOldFiles($filesToDelete);
+
         $this->jsonResponse([
           'success' => true,
           'message' => 'Pengaturan berhasil diperbarui.'
         ]);
       } else {
+        // Jika gagal save, hapus file yang baru diupload
+        $this->rollbackUploadedFiles($uploadedFiles);
+
         $this->jsonResponse([
           'success' => false,
           'message' => 'Gagal memperbarui pengaturan.'
         ], 500);
       }
     } catch (Exception $e) {
+      // Jika ada exception, hapus file yang baru diupload
+      $this->rollbackUploadedFiles($uploadedFiles);
+
       error_log("Update Settings Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
@@ -209,10 +220,11 @@ class SettingsController extends BaseController
     }
   }
 
-  // Handle file uploads for logo and favicon
+  // Handle file uploads for logo and favicon dengan management file lama yang aman
   private function handleFileUploads()
   {
     $uploadedFiles = [];
+    $filesToDelete = [];
 
     // Handle site logo upload
     if (!empty($_FILES['site_logo']['name'])) {
@@ -220,10 +232,13 @@ class SettingsController extends BaseController
       if ($logo !== false) {
         $uploadedFiles['site_logo'] = $logo;
 
-        // Delete old logo if exists
+        // Simpan info file lama untuk dihapus nanti setelah sukses save
         $oldLogo = $this->settings->getSetting('site_logo');
-        if ($oldLogo && $oldLogo !== '/assets/settings/logo.png') {
-          $this->deleteFileFromServer($oldLogo, 'logo');
+        if ($oldLogo && $oldLogo !== '/assets/settings/logo.png' && strpos($oldLogo, 'default') === false) {
+          $filesToDelete[] = [
+            'path' => $oldLogo,
+            'type' => 'logo'
+          ];
         }
       }
     }
@@ -234,15 +249,21 @@ class SettingsController extends BaseController
       if ($favicon !== false) {
         $uploadedFiles['site_favicon'] = $favicon;
 
-        // Delete old favicon if exists
+        // Simpan info file lama untuk dihapus nanti setelah sukses save
         $oldFavicon = $this->settings->getSetting('site_favicon');
-        if ($oldFavicon && $oldFavicon !== '/assets/settings/favicon.ico') {
-          $this->deleteFileFromServer($oldFavicon, 'favicon');
+        if ($oldFavicon && $oldFavicon !== '/assets/settings/favicon.ico' && strpos($oldFavicon, 'default') === false) {
+          $filesToDelete[] = [
+            'path' => $oldFavicon,
+            'type' => 'favicon'
+          ];
         }
       }
     }
 
-    return $uploadedFiles;
+    return [
+      'uploadedFiles' => $uploadedFiles,
+      'filesToDelete' => $filesToDelete
+    ];
   }
 
   // Handle single file upload
@@ -284,30 +305,76 @@ class SettingsController extends BaseController
     $target_path = $upload_path_full . $new_file_name;
 
     if (move_uploaded_file($file['tmp_name'], $target_path)) {
-      return $upload_dir . $new_file_name;
+      return $new_file_name;
     }
 
     error_log("Failed to move uploaded file for {$type}");
     return false;
   }
 
-  // Delete file from server
-  protected function deleteFileFromServer($file_path, $type = 'logo')
+  // Delete old files after successful database update
+  private function deleteOldFiles($filesToDelete)
   {
-    if (empty($file_path) || strpos($file_path, 'default') !== false) {
+    foreach ($filesToDelete as $fileInfo) {
+      $this->deleteFileFromServer($fileInfo['path'], $fileInfo['type']);
+    }
+  }
+
+  // Rollback uploaded files if operation fails
+  private function rollbackUploadedFiles($uploadedFiles)
+  {
+    foreach ($uploadedFiles as $filename) {
+      if ($filename !== false) {
+        $this->deleteFileFromServer($filename, 'rollback');
+      }
+    }
+  }
+
+  // Delete file from server
+  protected function deleteFileFromServer($filename, $type = 'logo')
+  {
+    if (empty($filename) || strpos($filename, 'default') !== false) {
+      error_log("Delete File: Filename kosong atau default untuk {$type}");
       return true;
     }
 
-    $full_path = __DIR__ . '/../../public/' . ltrim($file_path, '/');
+    // Tambahkan path directory karena hanya menyimpan nama file
+    $file_path = 'uploads/settings/' . $filename;
+    $full_path = __DIR__ . '/../../public/' . $file_path;
+
+    error_log("Delete File Attempt: {$type}");
+    error_log("Filename: {$filename}");
+    error_log("Full Path: {$full_path}");
 
     // Check if file exists and is a file
     if (file_exists($full_path) && is_file($full_path)) {
       if (unlink($full_path)) {
-        error_log("File {$type} berhasil dihapus: " . $full_path);
+        error_log("✅ File {$type} berhasil dihapus: " . $full_path);
         return true;
       } else {
-        error_log("Gagal menghapus file {$type} (Izin Ditolak): " . $full_path);
+        error_log("❌ Gagal menghapus file {$type} (Izin Ditolak): " . $full_path);
+
+        // Cek permissions
+        error_log("File Permissions: " . substr(sprintf('%o', fileperms($full_path)), -4));
+        error_log("Is Writable: " . (is_writable($full_path) ? 'Yes' : 'No'));
+
         return false;
+      }
+    } else {
+      error_log("⚠️ File {$type} tidak ditemukan: " . $full_path);
+
+      // Cek apakah directory exists
+      $dir = dirname($full_path);
+      error_log("Directory exists: " . (is_dir($dir) ? 'Yes' : 'No'));
+
+      // Coba cari file dengan path alternatif
+      $alternative_path = __DIR__ . '/../../public/uploads/settings/' . $filename;
+      if (file_exists($alternative_path)) {
+        error_log("File ditemukan di path alternatif: " . $alternative_path);
+        if (unlink($alternative_path)) {
+          error_log("✅ File {$type} berhasil dihapus dari path alternatif");
+          return true;
+        }
       }
     }
 

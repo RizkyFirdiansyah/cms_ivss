@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
 
-class HomeModel
+class FacilityPageModel
 {
   private $conn;
 
@@ -28,66 +28,11 @@ class HomeModel
     }
   }
 
-  // Get activities for home (from about page)
-  public function getActivitiesForHome()
+  // Get facility page contents
+  public function getFacilityPageContents()
   {
     try {
-      $activities = [];
-
-      // Get about page ID
-      $aboutPageId = $this->getPageId('about');
-      if (!$aboutPageId) return [];
-
-      for ($i = 1; $i <= 3; $i++) {
-        // about_activity_1_title
-        $title = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_title");
-        $description = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_description");
-        $image = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_image");
-
-        // Only include activities that have at least a title
-        if (!empty($title)) {
-          $activities[] = [
-            'title' => $title,
-            'description' => $description ?? '',
-            'image' => $image ?? '',
-            'order' => $i
-          ];
-        }
-      }
-
-      return $activities;
-    } catch (PDOException $e) {
-      error_log("DB Error (getActivitiesForHome): " . $e->getMessage());
-      return [];
-    }
-  }
-
-  // Get content by page ID and key
-  private function getContentByPageAndKey($pageId, $key)
-  {
-    try {
-      $query = "SELECT content_value FROM page_contents 
-                WHERE page_id = :page_id AND content_key = :content_key";
-
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['content_value'] : null;
-    } catch (PDOException $e) {
-      error_log("DB Error (getContentByPageAndKey): " . $e->getMessage());
-      return null;
-    }
-  }
-
-
-  // Get home contents
-  public function getHomeContents()
-  {
-    try {
-      $pageId = $this->getPageId('home');
+      $pageId = $this->getPageId('facility');
       if (!$pageId) return [];
 
       $query = "SELECT content_key, content_type, content_value 
@@ -112,20 +57,20 @@ class HomeModel
 
       return $contents;
     } catch (PDOException $e) {
-      error_log("DB Error (getHomeContents): " . $e->getMessage());
+      error_log("DB Error (getFacilityPageContents): " . $e->getMessage());
       return [];
     }
   }
 
-  // Save multiple home contents
-  public function saveMultipleHomeContents($contents, $userId)
+  // Save multiple facility page contents
+  public function saveMultipleFacilityContents($contents, $userId)
   {
     $this->conn->beginTransaction();
 
     try {
-      $pageId = $this->getPageId('home');
+      $pageId = $this->getPageId('facility');
       if (!$pageId) {
-        $pageId = $this->createHomePage();
+        $pageId = $this->createFacilityPage();
         if (!$pageId) {
           $this->conn->rollBack();
           return false;
@@ -156,23 +101,23 @@ class HomeModel
       return true;
     } catch (PDOException $e) {
       $this->conn->rollBack();
-      error_log("DB Error (saveMultipleHomeContents): " . $e->getMessage());
+      error_log("DB Error (saveMultipleFacilityContents): " . $e->getMessage());
       return false;
     }
   }
 
-  // Create home page if not exists
-  private function createHomePage()
+  // Create facility page if not exists
+  private function createFacilityPage()
   {
     try {
-      $query = "INSERT INTO pages (name, slug) VALUES ('Home', 'home') RETURNING id";
+      $query = "INSERT INTO pages (name, slug) VALUES ('Facility', 'facility') RETURNING id";
       $stmt = $this->conn->prepare($query);
       $stmt->execute();
 
       $result = $stmt->fetch(PDO::FETCH_ASSOC);
       return $result ? $result['id'] : null;
     } catch (PDOException $e) {
-      error_log("DB Error (createHomePage): " . $e->getMessage());
+      error_log("DB Error (createFacilityPage): " . $e->getMessage());
       return null;
     }
   }

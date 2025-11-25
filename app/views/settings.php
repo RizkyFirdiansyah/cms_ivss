@@ -264,7 +264,7 @@
       // Logo preview
       if (settings.site_logo && settings.site_logo.value) {
         $('#logo-preview').html(`
-          <img src="${settings.site_logo.value}" alt="Current Logo" class="img-thumbnail" style="max-height: 80px;">
+          <img src="${BASE_URL}/uploads/settings/${settings.site_logo.value}" alt="Current Logo" class="img-thumbnail" style="max-height: 80px;">
           <div class="form-text text-xs mt-1">Logo saat ini</div>
         `);
       } else {
@@ -274,7 +274,7 @@
       // Favicon preview
       if (settings.site_favicon && settings.site_favicon.value) {
         $('#favicon-preview').html(`
-          <img src="${settings.site_favicon.value}" alt="Current Favicon" class="img-thumbnail" style="max-height: 80px;">
+          <img src="${BASE_URL}/uploads/settings/${settings.site_favicon.value}" alt="Current Favicon" class="img-thumbnail" style="max-height: 80px;">
           <div class="form-text text-xs mt-1">Favicon saat ini</div>
         `);
       } else {
@@ -337,6 +337,12 @@
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
       const formData = new FormData($('#form-settings')[0]);
+
+      // Debug: Log semua data yang akan dikirim
+      console.log('Form data yang akan dikirim:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ', pair[1]);
+      }
 
       $.ajax({
         url: BASE_URL + '/settings/update',
