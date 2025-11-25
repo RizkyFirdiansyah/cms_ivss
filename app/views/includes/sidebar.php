@@ -45,7 +45,7 @@ $role = $_SESSION['role'] ?? 'guest';
 
         <!-- GROUP: Web Profile Management -->
         <li class="nav-item mt-3">
-          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Interface Manajemen</h6>
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Manejemen Interface</h6>
         </li>
 
         <!-- DROPDOWN INTERFACE -->
@@ -57,13 +57,17 @@ $role = $_SESSION['role'] ?? 'guest';
 
           <div class="collapse" id="interfaceMenu">
             <ul class="nav ms-2">
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/settings"><i class="ni ni-settings-gear-65"></i>Pengaturan Umum</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/home"><i class="ni ni-shop"></i>Halaman Beranda</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/about"><i class="ni ni-single-copy-04"></i>Halaman Tentang Kami</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/member"><i class="ni ni-circle-08"></i>Halaman Member</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas-page"><i class="ni ni-building"></i>Halaman Fasilitas</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/sop-page"><i class="ni ni-building"></i>Halaman SOP</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri-page"><i class="ni ni-building"></i>Halaman Galeri</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/settings"><i class="ni ni-settings-gear-65"></i> Pengaturan Umum</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/home"><i class="ni ni-shop"></i> Halaman Beranda</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/about"><i class="ni ni-single-copy-04"></i> Halaman Tentang Kami</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/member"><i class="ni ni-badge"></i> Halaman Member</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas-page"><i class="ni ni-building"></i> Halaman Fasilitas</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/sop-page"><i class="ni ni-collection"></i> Halaman SOP</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri-page"><i class="ni ni-album-2"></i> Halaman Galeri</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita-page"><i class="ni ni-notification-70"></i> Halaman Berita</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi-page"><i class="ni ni-books"></i> Halaman Publikasi</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian-page"><i class="ni ni-zoom-split-in"></i> Halaman Penelitian</a>
+              </li>
             </ul>
           </div>
         </li>

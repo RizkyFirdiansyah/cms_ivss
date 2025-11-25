@@ -1,29 +1,44 @@
 <?php
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../models/BasePageModel.php';
 
-class HomePageModel
+class HomePageModel extends BasePageModel
 {
-  private $conn;
-
   public function __construct()
   {
-    $db = new Database();
-    $this->conn = $db->getConnection();
+    parent::__construct('home', 'Home');
   }
 
-  // Get page ID by slug
-  public function getPageId($slug)
+  // Get all home contents
+  public function getHomeContents()
+  {
+    return $this->getPageContents();
+  }
+
+  // Save multiple home contents
+  public function saveMultipleHomeContents($contents, $userId)
+  {
+    return $this->saveMultipleContents($contents, $userId);
+  }
+
+  // Get home content by key
+  public function getHomeContent($key)
   {
     try {
-      $query = "SELECT id FROM pages WHERE slug = :slug";
+      $pageId = $this->getPageId();
+      if (!$pageId) return null;
+
+      $query = "SELECT content_value FROM page_contents 
+                WHERE page_id = :page_id AND content_key = :content_key";
+
       $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':slug', $slug, PDO::PARAM_STR);
+      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
+      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
       $stmt->execute();
 
       $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['id'] : null;
+      return $result ? $result['content_value'] : null;
     } catch (PDOException $e) {
-      error_log("DB Error (getPageId): " . $e->getMessage());
+      error_log("DB Error (getHomeContent): " . $e->getMessage());
       return null;
     }
   }
@@ -34,22 +49,21 @@ class HomePageModel
     try {
       $activities = [];
 
-      // Get about page ID
-      $aboutPageId = $this->getPageId('about');
-      if (!$aboutPageId) return [];
+      // Get about page contents
+      $aboutModel = new AboutPageModel();
+      $aboutContents = $aboutModel->getAboutContents();
 
       for ($i = 1; $i <= 3; $i++) {
-        // about_activity_1_title
-        $title = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_title");
-        $description = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_description");
-        $image = $this->getContentByPageAndKey($aboutPageId, "activity_{$i}_image");
+        $title = $aboutContents["activity_{$i}_title"]['value'] ?? '';
+        $description = $aboutContents["activity_{$i}_description"]['value'] ?? '';
+        $image = $aboutContents["activity_{$i}_image"]['value'] ?? '';
 
         // Only include activities that have at least a title
         if (!empty($title)) {
           $activities[] = [
             'title' => $title,
-            'description' => $description ?? '',
-            'image' => $image ?? '',
+            'description' => $description,
+            'image' => $image,
             'order' => $i
           ];
         }
@@ -62,118 +76,41 @@ class HomePageModel
     }
   }
 
-  // Get content by page ID and key
-  private function getContentByPageAndKey($pageId, $key)
+  // Get home header data
+  public function getHomeHeader()
   {
     try {
-      $query = "SELECT content_value FROM page_contents 
-                WHERE page_id = :page_id AND content_key = :content_key";
+      $contents = $this->getPageContents();
 
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['content_value'] : null;
+      return [
+        'title' => $contents['hero_title']['value'] ?? 'Selamat Datang di LAB IVSS',
+        'subtitle' => $contents['hero_subtitle']['value'] ?? 'Laboratorium Inovasi dan Visual Sistem Cerdas',
+        'image_path' => $contents['hero_image']['value'] ?? ''
+      ];
     } catch (PDOException $e) {
-      error_log("DB Error (getContentByPageAndKey): " . $e->getMessage());
-      return null;
+      error_log("DB Error (getHomeHeader): " . $e->getMessage());
+      return [
+        'title' => 'Selamat Datang di LAB IVSS',
+        'subtitle' => 'Laboratorium Inovasi dan Visual Sistem Cerdas',
+        'image_path' => ''
+      ];
     }
   }
 
-
-  // Get home contents
-  public function getHomeContents()
+  // Implement abstract method dari BasePageModel
+  public function getHeader()
   {
-    try {
-      $pageId = $this->getPageId('home');
-      if (!$pageId) return [];
-
-      $query = "SELECT content_key, content_type, content_value 
-                FROM page_contents 
-                WHERE page_id = :page_id 
-                ORDER BY content_key";
-
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->execute();
-
-      $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-      // Convert to associative array
-      $contents = [];
-      foreach ($results as $row) {
-        $contents[$row['content_key']] = [
-          'type' => $row['content_type'],
-          'value' => $row['content_value']
-        ];
-      }
-
-      return $contents;
-    } catch (PDOException $e) {
-      error_log("DB Error (getHomeContents): " . $e->getMessage());
-      return [];
-    }
+    return $this->getHomeHeader();
   }
 
-  // Save multiple home contents
-  public function saveMultipleHomeContents($contents, $userId)
+  public function saveHeader($headerData, $userId)
   {
-    $this->conn->beginTransaction();
+    $contents = [
+      'hero_title' => ['type' => 'text', 'value' => $headerData['title'] ?? ''],
+      'hero_subtitle' => ['type' => 'text', 'value' => $headerData['subtitle'] ?? ''],
+      'hero_image' => ['type' => 'image', 'value' => $headerData['image_path'] ?? '']
+    ];
 
-    try {
-      $pageId = $this->getPageId('home');
-      if (!$pageId) {
-        $pageId = $this->createHomePage();
-        if (!$pageId) {
-          $this->conn->rollBack();
-          return false;
-        }
-      }
-
-      $query = "INSERT INTO page_contents (page_id, user_id, content_key, content_type, content_value) 
-                VALUES (:page_id, :user_id, :content_key, :content_type, :content_value)
-                ON CONFLICT (page_id, content_key) 
-                DO UPDATE SET 
-                  content_value = EXCLUDED.content_value,
-                  content_type = EXCLUDED.content_type,
-                  user_id = EXCLUDED.user_id,
-                  last_updated = CURRENT_TIMESTAMP";
-
-      $stmt = $this->conn->prepare($query);
-
-      foreach ($contents as $key => $data) {
-        $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-        $stmt->bindValue(':content_type', $data['type'] ?? 'text', PDO::PARAM_STR);
-        $stmt->bindValue(':content_value', $data['value'] ?? '', PDO::PARAM_STR);
-        $stmt->execute();
-      }
-
-      $this->conn->commit();
-      return true;
-    } catch (PDOException $e) {
-      $this->conn->rollBack();
-      error_log("DB Error (saveMultipleHomeContents): " . $e->getMessage());
-      return false;
-    }
-  }
-
-  // Create home page if not exists
-  private function createHomePage()
-  {
-    try {
-      $query = "INSERT INTO pages (name, slug) VALUES ('Home', 'home') RETURNING id";
-      $stmt = $this->conn->prepare($query);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['id'] : null;
-    } catch (PDOException $e) {
-      error_log("DB Error (createHomePage): " . $e->getMessage());
-      return null;
-    }
+    return $this->saveMultipleContents($contents, $userId);
   }
 }

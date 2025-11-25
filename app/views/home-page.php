@@ -34,7 +34,7 @@
                 <h5 class="m-0">Manajemen Konten Home</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-home">
-                    <i class="fas fa-save me-1"></i> Simpan Semua Konten
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -259,8 +259,6 @@
 
     // Function untuk menampilkan preview gambar yang sudah ada
     function showExistingImagePreviews(contents) {
-      console.log('Setting old image values:', contents);
-
       const imageFields = [
         'hero_image', 'profile_image_1', 'profile_image_2', 'profile_image_3'
       ];
@@ -269,21 +267,28 @@
         const previewId = `${field.replace(/_/g, '-')}-preview`;
         const hiddenInputId = `old_${field}`;
 
-        if (contents[field] && contents[field].value) {
+        // Get image path from structured data
+        let imagePath = '';
+        if (field === 'hero_image') {
+          imagePath = contents.hero?.image_path || '';
+        } else if (field.startsWith('profile_image_')) {
+          const imageNum = field.split('_')[2];
+          imagePath = contents.profile_images?.[`image_${imageNum}`] || '';
+        }
+
+        if (imagePath) {
           // Set nilai input hidden untuk file lama
-          $(`#${hiddenInputId}`).val(contents[field].value);
-          console.log(`Set ${hiddenInputId} to:`, contents[field].value);
+          $(`#${hiddenInputId}`).val(imagePath);
 
           // Tampilkan preview gambar
           $(`#${previewId}`).html(`
-            <img src="${BASE_URL}/uploads/home/${contents[field].value}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
-            <div class="form-text text-xs mt-1">Gambar saat ini</div>
-            <input type="hidden" name="old_${field}" value="${contents[field].value}">
-          `);
+          <img src="${BASE_URL}/uploads/home/${imagePath}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
+          <div class="form-text text-xs mt-1">Gambar saat ini</div>
+          <input type="hidden" name="old_${field}" value="${imagePath}">
+        `);
         } else {
           // Kosongkan input hidden jika tidak ada gambar
           $(`#${hiddenInputId}`).val('');
-          console.log(`Cleared ${hiddenInputId}`);
           $(`#${previewId}`).html('<div class="text-muted text-xs">Belum ada gambar</div>');
         }
       });
@@ -300,9 +305,9 @@
 
         reader.onload = function(e) {
           $(`#${previewId}`).html(`
-            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 120px;">
-            <div class="form-text text-xs mt-1">Preview gambar baru</div>
-          `);
+          <img src="${e.target.result}" class="img-thumbnail" style="max-height: 120px;">
+          <div class="form-text text-xs mt-1">Preview gambar baru</div>
+        `);
         }
 
         reader.readAsDataURL(this.files[0]);
@@ -323,50 +328,48 @@
           container.empty();
 
           if (res.success && res.data && res.data.length > 0) {
-            console.log(res);
             res.data.forEach((activity, index) => {
               container.append(`
-                <div class="col-md-4">
-                  <div class="card h-100">
-                    ${activity.image ? `
-                    <img src="${BASE_URL}/uploads/about/${activity.image}" class="p-0 card-img-top mb-2" style="height: 150px; object-fit: cover;" alt="${activity.title}">
-                    ` : `
-                    <div class="text-center text-muted py-4 bg-light rounded">
-                    <i class="fas fa-image fa-2x mb-2"></i>
-                    <p class="small mb-0">Belum ada gambar</p>
-                    </div>
-                    `}
-                    <div class="card-body p-4 pt-2">
-                      <h6 class="card-title text-sm">${activity.title || `Kegiatan ${index + 1}`}</h6>
-                      <p class="card-text text-xs text-muted mb-0">${activity.description || 'Belum ada deskripsi'}</p>
-                    </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  ${activity.image ? `
+                  <img src="${BASE_URL}/uploads/about/${activity.image}" class="p-0 card-img-top mb-2" style="height: 150px; object-fit: cover;" alt="${activity.title}">
+                  ` : `
+                  <div class="text-center text-muted py-4 bg-light rounded">
+                  <i class="fas fa-image fa-2x mb-2"></i>
+                  <p class="small mb-0">Belum ada gambar</p>
                   </div>
-                </div>
-              `);
-            });
-          } else {
-            container.html(`
-              <div class="col-12">
-                <div class="text-center text-muted py-4">
-                  <i class="fas fa-tasks fa-2x mb-2"></i>
-                  <h6 class="mb-2">Belum ada kegiatan</h6>
-                  <p class="text-xs mb-0">Tambahkan kegiatan melalui menu <a href="${BASE_URL}/admin/about">Tentang Kami</a></p>
+                  `}
+                  <div class="card-body p-4 pt-2">
+                    <h6 class="card-title text-sm">${activity.title || `Kegiatan ${index + 1}`}</h6>
+                    <p class="card-text text-xs text-muted mb-0">${activity.description || 'Belum ada deskripsi'}</p>
+                  </div>
                 </div>
               </div>
             `);
-          }
-        },
-        error: function(xhr) {
-          console.error('Error loading activities preview:', xhr);
-          $('#activities-preview-container').html(`
+            });
+          } else {
+            container.html(`
             <div class="col-12">
-              <div class="text-center text-danger py-4">
-                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                <h6 class="mb-2">Gagal memuat data kegiatan</h6>
-                <p class="text-xs mb-0">Terjadi kesalahan saat mengambil data</p>
+              <div class="text-center text-muted py-4">
+                <i class="fas fa-tasks fa-2x mb-2"></i>
+                <h6 class="mb-2">Belum ada kegiatan</h6>
+                <p class="text-xs mb-0">Tambahkan kegiatan melalui menu <a href="${BASE_URL}/admin/about">Tentang Kami</a></p>
               </div>
             </div>
           `);
+          }
+        },
+        error: function(xhr) {
+          $('#activities-preview-container').html(`
+          <div class="col-12">
+            <div class="text-center text-danger py-4">
+              <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+              <h6 class="mb-2">Gagal memuat data kegiatan</h6>
+              <p class="text-xs mb-0">Terjadi kesalahan saat mengambil data</p>
+            </div>
+          </div>
+        `);
         }
       });
     }
@@ -394,57 +397,55 @@
           indicators.empty();
 
           if (res.success && res.data && res.data.length > 0) {
-            console.log(res);
 
             res.data.forEach((image, index) => {
               // Add indicator
               indicators.append(`
-                <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="${index}" 
-                    class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
-              `);
+              <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="${index}" 
+                  class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
+            `);
 
               // Add slide
               container.append(`
-                <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                  <div class="d-flex flex-column align-items-center">
-                    <img src="${BASE_URL}/uploads/gallery/${image.link}" class="d-block img-fluid rounded" style="max-height: 500px; object-fit: contain;" alt="${image.title || `Gambar ${index + 1}`}">
-                    <div class="mt-3 text-center">
-                      <h6 class="mb-1">${image.title || `Gambar ${index + 1}`}</h6>
-                      ${image.description ? `<p class="text-sm text-muted mb-0">${image.description}</p>` : ''}
-                    </div>
+              <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                <div class="d-flex flex-column align-items-center">
+                  <img src="${BASE_URL}/uploads/gallery/${image.link}" class="d-block img-fluid rounded" style="max-height: 500px; object-fit: contain;" alt="${image.title || `Gambar ${index + 1}`}">
+                  <div class="mt-3 text-center">
+                    <h6 class="mb-1">${image.title || `Gambar ${index + 1}`}</h6>
+                    ${image.description ? `<p class="text-sm text-muted mb-0">${image.description}</p>` : ''}
                   </div>
                 </div>
-              `);
+              </div>
+            `);
             });
 
           } else {
             // Tampilan jika kosong
             container.html(`
-              <div class="carousel-item active">
-                <div class="d-flex flex-column align-items-center justify-content-center py-5">
-                  <i class="fas fa-images fa-4x text-muted mb-3"></i>
-                  <h5 class="text-muted">Belum ada gambar di galeri</h5>
-                  <p class="text-sm text-muted">Upload gambar melalui menu Galeri terlebih dahulu</p>
-                </div>
+            <div class="carousel-item active">
+              <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                <i class="fas fa-images fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Belum ada gambar di galeri</h5>
+                <p class="text-sm text-muted">Upload gambar melalui menu Galeri terlebih dahulu</p>
               </div>
-            `);
+            </div>
+          `);
           }
 
           // Tampilkan modal setelah konten dimuat
           myModal.show();
         },
         error: function(xhr) {
-          console.error('Error loading gallery:', xhr);
           const container = $('#gallery-slider-container');
           container.html(`
-            <div class="carousel-item active">
-              <div class="d-flex flex-column align-items-center justify-content-center py-5">
-                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
-                <h5 class="text-danger">Gagal memuat data galeri</h5>
-                <p class="text-sm text-muted">Terjadi kesalahan saat mengambil data</p>
-              </div>
+          <div class="carousel-item active">
+            <div class="d-flex flex-column align-items-center justify-content-center py-5">
+              <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+              <h5 class="text-danger">Gagal memuat data galeri</h5>
+              <p class="text-sm text-muted">Terjadi kesalahan saat mengambil data</p>
             </div>
-          `);
+          </div>
+        `);
 
           myModal.show();
         }
@@ -458,31 +459,23 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('Home contents response:', res);
           if (res.success && res.data) {
-            // Hero Section
-            $('#form-home input[name="hero_title"]').val(res.data.hero_title?.value || '');
-            $('#form-home input[name="hero_subtitle"]').val(res.data.hero_subtitle?.value || '');
+            const data = res.data;
 
-            // Profile Section
-            $('#form-home textarea[name="profile_description"]').val(res.data.profile_description?.value || '');
+            // Hero Section - menggunakan structured data
+            $('#form-home input[name="hero_title"]').val(data.hero?.title || '');
+            $('#form-home input[name="hero_subtitle"]').val(data.hero?.subtitle || '');
+
+            // Profile Section - menggunakan structured data
+            $('#form-home textarea[name="profile_description"]').val(data.profile?.description || '');
 
             // Show existing images dan set input hidden
-            showExistingImagePreviews(res.data);
-
-            console.log('Data home berhasil dimuat ke form');
+            showExistingImagePreviews(data);
           } else {
             showAlert('Gagal memuat data konten home', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten home.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -500,12 +493,6 @@
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
       const formData = new FormData($('#form-home')[0]);
-
-      // Debug: Log semua data yang akan dikirim
-      console.log('Form data yang akan dikirim:');
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ', pair[1]);
-      }
 
       $.ajax({
         url: BASE_URL + '/home/update',
@@ -527,7 +514,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten home.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
