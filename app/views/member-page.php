@@ -34,7 +34,7 @@
                 <h5 class="m-0">Manajemen Halaman Member</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-member">
-                    <i class="fas fa-save me-1"></i> Simpan Konten
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -178,28 +178,18 @@
 
     // Function untuk menampilkan preview gambar yang sudah ada
     function showExistingImagePreviews(contents) {
-      console.log('Setting old image values:', contents);
-
-      const imageFields = ['member_header_image'];
+      const imageFields = [
+        'member_header_image'
+      ];
 
       imageFields.forEach(field => {
         const previewId = `${field.replace(/_/g, '-')}-preview`;
-        const hiddenInput = $(`input[name="old_${field}"]`);
-
         if (contents[field] && contents[field].value) {
-          // Set nilai input hidden untuk file lama
-          hiddenInput.val(contents[field].value);
-          console.log(`Set old_${field} to:`, contents[field].value);
-
-          // Tampilkan preview gambar
           $(`#${previewId}`).html(`
             <img src="${BASE_URL}/uploads/member/${contents[field].value}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
             <div class="form-text text-xs mt-1">Gambar saat ini</div>
           `);
         } else {
-          // Kosongkan input hidden jika tidak ada gambar
-          hiddenInput.val('');
-          console.log(`Cleared old_${field}`);
           $(`#${previewId}`).html('<div class="text-muted text-xs">Belum ada gambar</div>');
         }
       });
@@ -242,8 +232,6 @@
           container.empty();
 
           if (res.success && res.data && res.data.length > 0) {
-            console.log('Members data:', res.data);
-
             // Group members by role
             const groupedMembers = groupMembersByRole(res.data);
 
@@ -362,7 +350,6 @@
           myModal.show();
         },
         error: function(xhr) {
-          console.error('Error loading members:', xhr);
           const container = $('#members-preview-container');
           container.html(`
         <div class="col-12">
@@ -444,28 +431,26 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('Member contents response:', res);
           if (res.success && res.data) {
             // Header Section
-            $('#form-member input[name="member_header_title"]').val(res.data.member_header_title?.value || '');
-            $('#form-member input[name="member_header_subtitle"]').val(res.data.member_header_subtitle?.value || '');
+            $('#form-member input[name="member_header_title"]').val(res.data.header?.title || '');
+            $('#form-member input[name="member_header_subtitle"]').val(res.data.header?.subtitle || '');
 
             // Show existing images
-            showExistingImagePreviews(res.data);
+            if (res.data.header) {
+              const contents = {
+                member_header_image: {
+                  value: res.data.header?.image_path || ''
+                }
+              };
+              showExistingImagePreviews(contents);
+            }
 
-            console.log('Data member berhasil dimuat ke form');
           } else {
             showAlert('Gagal memuat data konten member', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten member.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -503,7 +488,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten member.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;

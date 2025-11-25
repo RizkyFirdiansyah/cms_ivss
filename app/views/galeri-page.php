@@ -34,7 +34,7 @@
                 <h5 class="m-0">Manajemen Halaman Galeri</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-gallery">
-                    <i class="fas fa-save me-1"></i> Simpan Header
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -78,7 +78,7 @@
                 <!-- Info Section -->
                 <div class="card m-4">
                   <div class="card-body">
-                    <div class="alert alert-info text-white">
+                    <div class="alert alert-warning text-white mb-0">
                       <i class="fas fa-info-circle me-2"></i>
                       <strong>Informasi:</strong> Konten galeri (gambar-gambar) dikelola melalui <strong>Manajemen Galeri</strong>.
                       <a href="<?= BASE_URL ?>/galeri" class="alert-link">Kelola galeri di sini</a>.
@@ -164,7 +164,6 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('Gallery contents response:', res);
           if (res.success && res.data) {
             // Header Section
             $('#form-gallery input[name="gallery_header_title"]').val(res.data.header?.title || '');
@@ -180,19 +179,11 @@
               showExistingImagePreviews(contents);
             }
 
-            console.log('Data galeri berhasil dimuat ke form');
           } else {
             showAlert('Gagal memuat data konten galeri', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten galeri.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -231,7 +222,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten galeri.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;

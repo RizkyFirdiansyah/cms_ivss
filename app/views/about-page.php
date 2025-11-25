@@ -34,7 +34,7 @@
                 <h5 class="m-0">Manajemen Konten Tentang Kami</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-about">
-                    <i class="fas fa-save me-1"></i> Simpan Semua Konten
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -421,15 +421,30 @@
 
       imageFields.forEach(field => {
         const previewId = `${field.replace(/_/g, '-')}-preview`;
-        if (contents[field] && contents[field].value) {
+        const imagePath = getImagePath(contents, field);
+
+        if (imagePath) {
           $(`#${previewId}`).html(`
-            <img src="${BASE_URL}/uploads/about/${contents[field].value}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
-            <div class="form-text text-xs mt-1">Gambar saat ini</div>
-          `);
+          <img src="${BASE_URL}/uploads/about/${imagePath}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
+          <div class="form-text text-xs mt-1">Gambar saat ini</div>
+        `);
         } else {
           $(`#${previewId}`).html('<div class="text-muted text-xs">Belum ada gambar</div>');
         }
       });
+    }
+
+    // Helper function untuk mendapatkan path gambar dari structured data
+    function getImagePath(contents, field) {
+      const fieldMap = {
+        'about_header_image': contents.header?.image_path,
+        'about_profile_image': contents.profile?.image_path,
+        'activity_1_image': contents.activities?.items?.[0]?.image_path,
+        'activity_2_image': contents.activities?.items?.[1]?.image_path,
+        'activity_3_image': contents.activities?.items?.[2]?.image_path
+      };
+
+      return fieldMap[field] || '';
     }
 
     // Update activity title preview in real-time
@@ -462,57 +477,54 @@
           indicators.empty();
 
           if (res.success && res.data && res.data.length > 0) {
-            console.log(res);
-
             res.data.forEach((image, index) => {
               // Add indicator
               indicators.append(`
-                <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="${index}" 
-                    class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
-              `);
+              <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="${index}" 
+                  class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
+            `);
 
               // Add slide
               container.append(`
-                <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                  <div class="d-flex flex-column align-items-center">
-                    <img src="${BASE_URL}/uploads/gallery/${image.link}" class="d-block img-fluid rounded" style="max-height: 500px; object-fit: contain;" alt="${image.title || `Gambar ${index + 1}`}">
-                    <div class="mt-3 text-center">
-                      <h6 class="mb-1">${image.title || `Gambar ${index + 1}`}</h6>
-                      ${image.description ? `<p class="text-sm text-muted mb-0">${image.description}</p>` : ''}
-                    </div>
+              <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                <div class="d-flex flex-column align-items-center">
+                  <img src="${BASE_URL}/uploads/gallery/${image.link}" class="d-block img-fluid rounded" style="max-height: 500px; object-fit: contain;" alt="${image.title || `Gambar ${index + 1}`}">
+                  <div class="mt-3 text-center">
+                    <h6 class="mb-1">${image.title || `Gambar ${index + 1}`}</h6>
+                    ${image.description ? `<p class="text-sm text-muted mb-0">${image.description}</p>` : ''}
                   </div>
                 </div>
-              `);
+              </div>
+            `);
             });
 
           } else {
             // Tampilan jika kosong
             container.html(`
-              <div class="carousel-item active">
-                <div class="d-flex flex-column align-items-center justify-content-center py-5">
-                  <i class="fas fa-images fa-4x text-muted mb-3"></i>
-                  <h5 class="text-muted">Belum ada gambar di galeri</h5>
-                  <p class="text-sm text-muted">Upload gambar melalui menu Galeri terlebih dahulu</p>
-                </div>
+            <div class="carousel-item active">
+              <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                <i class="fas fa-images fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Belum ada gambar di galeri</h5>
+                <p class="text-sm text-muted">Upload gambar melalui menu Galeri terlebih dahulu</p>
               </div>
-            `);
+            </div>
+          `);
           }
 
           // Tampilkan modal setelah konten dimuat
           myModal.show();
         },
         error: function(xhr) {
-          console.error('Error loading gallery:', xhr);
           const container = $('#gallery-slider-container');
           container.html(`
-            <div class="carousel-item active">
-              <div class="d-flex flex-column align-items-center justify-content-center py-5">
-                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
-                <h5 class="text-danger">Gagal memuat data galeri</h5>
-                <p class="text-sm text-muted">Terjadi kesalahan saat mengambil data</p>
-              </div>
+          <div class="carousel-item active">
+            <div class="d-flex flex-column align-items-center justify-content-center py-5">
+              <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+              <h5 class="text-danger">Gagal memuat data galeri</h5>
+              <p class="text-sm text-muted">Terjadi kesalahan saat mengambil data</p>
             </div>
-          `);
+          </div>
+        `);
 
           myModal.show();
         }
@@ -526,59 +538,54 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('About contents response:', res);
           if (res.success && res.data) {
+            const data = res.data;
+
             // Header Section
-            $('#form-about input[name="about_header_title"]').val(res.data.about_header_title?.value || '');
-            $('#form-about input[name="about_header_subtitle"]').val(res.data.about_header_subtitle?.value || '');
+            $('#form-about input[name="about_header_title"]').val(data.header?.title || '');
+            $('#form-about input[name="about_header_subtitle"]').val(data.header?.subtitle || '');
 
             // Profile Section
-            $('#form-about textarea[name="about_profile_description"]').val(res.data.about_profile_description?.value || '');
+            $('#form-about textarea[name="about_profile_description"]').val(data.profile?.description || '');
 
             // Vision & Mission Section
-            $('#form-about input[name="about_vision_title"]').val(res.data.about_vision_title?.value || '');
-            $('#form-about textarea[name="about_vision_content"]').val(res.data.about_vision_content?.value || '');
-            $('#form-about input[name="about_mission_title"]').val(res.data.about_mission_title?.value || '');
-            $('#form-about textarea[name="about_mission_content"]').val(res.data.about_mission_content?.value || '');
+            $('#form-about input[name="about_vision_title"]').val(data.vision_mission?.vision_title || '');
+            $('#form-about textarea[name="about_vision_content"]').val(data.vision_mission?.vision_content || '');
+            $('#form-about input[name="about_mission_title"]').val(data.vision_mission?.mission_title || '');
+            $('#form-about textarea[name="about_mission_content"]').val(data.vision_mission?.mission_content || '');
 
             // Activities Section
-            $('#form-about input[name="activities_title"]').val(res.data.activities_title?.value || '');
-            $('#form-about input[name="activities_subtitle"]').val(res.data.activities_subtitle?.value || '');
+            $('#form-about input[name="activities_title"]').val(data.activities?.title || '');
+            $('#form-about input[name="activities_subtitle"]').val(data.activities?.subtitle || '');
 
             // Activities items
-            $('#form-about input[name="activity_1_title"]').val(res.data.activity_1_title?.value || '');
-            $('#form-about textarea[name="activity_1_description"]').val(res.data.activity_1_description?.value || '');
-            $('#form-about input[name="activity_2_title"]').val(res.data.activity_2_title?.value || '');
-            $('#form-about textarea[name="activity_2_description"]').val(res.data.activity_2_description?.value || '');
-            $('#form-about input[name="activity_3_title"]').val(res.data.activity_3_title?.value || '');
-            $('#form-about textarea[name="activity_3_description"]').val(res.data.activity_3_description?.value || '');
+            if (data.activities?.items && data.activities.items.length >= 3) {
+              $('#form-about input[name="activity_1_title"]').val(data.activities.items[0]?.title || '');
+              $('#form-about textarea[name="activity_1_description"]').val(data.activities.items[0]?.description || '');
+              $('#form-about input[name="activity_2_title"]').val(data.activities.items[1]?.title || '');
+              $('#form-about textarea[name="activity_2_description"]').val(data.activities.items[1]?.description || '');
+              $('#form-about input[name="activity_3_title"]').val(data.activities.items[2]?.title || '');
+              $('#form-about textarea[name="activity_3_description"]').val(data.activities.items[2]?.description || '');
+            }
 
             // Gallery Section
-            $('#form-about input[name="gallery_title"]').val(res.data.gallery_title?.value || '');
-            $('#form-about input[name="gallery_subtitle"]').val(res.data.gallery_subtitle?.value || '');
+            $('#form-about input[name="gallery_title"]').val(data.gallery?.title || '');
+            $('#form-about input[name="gallery_subtitle"]').val(data.gallery?.subtitle || '');
 
             // Show existing images
-            showExistingImagePreviews(res.data);
+            showExistingImagePreviews(data);
 
             // Update activity titles preview
             for (let i = 1; i <= 3; i++) {
-              const title = res.data[`activity_${i}_title`]?.value || `Kegiatan ${i}`;
+              const title = data.activities?.items?.[i - 1]?.title || `Kegiatan ${i}`;
               $(`#about-activity-${i}-preview-title`).text(title);
             }
 
-            console.log('Data about berhasil dimuat ke form');
           } else {
             showAlert('Gagal memuat data konten tentang kami', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten tentang kami.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -616,7 +623,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten tentang kami.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -640,9 +646,9 @@
 
         reader.onload = function(e) {
           $(`#${previewId}`).html(`
-            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 120px;">
-            <div class="form-text text-xs mt-1">Preview gambar baru</div>
-          `);
+          <img src="${e.target.result}" class="img-thumbnail" style="max-height: 120px;">
+          <div class="form-text text-xs mt-1">Preview gambar baru</div>
+        `);
         }
 
         reader.readAsDataURL(this.files[0]);
@@ -651,8 +657,6 @@
         readAboutData();
       }
     });
-
-
 
     // Initialize on document ready
     $(document).ready(function() {

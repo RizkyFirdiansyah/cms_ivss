@@ -19,7 +19,7 @@ require_once '../app/controllers/AboutPageController.php';
 require_once '../app/controllers/MemberPageController.php';
 require_once '../app/controllers/FacilityPageController.php';
 require_once '../app/controllers/SopPageController.php';
-require_once '../app/controllers/GaleriPageController.php';
+require_once '../app/controllers/GalleryPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -234,7 +234,7 @@ switch ($url) {
     break;
 
   case 'about/gallery':
-    (new AboutPageController())->getGalleryImages();
+    (new AboutPageController())->getGallery();
     break;
 
   case 'member':
@@ -259,10 +259,6 @@ switch ($url) {
 
   case 'fasilitas-page/read':
     (new FacilityPageController())->getContents();
-    break;
-
-  case 'fasilitas-page/allFasilitas':
-    (new FacilityPageController())->getAllFacilities();
     break;
 
   case 'fasilitas-page/update':
