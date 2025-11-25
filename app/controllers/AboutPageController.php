@@ -1,5 +1,5 @@
 <?php
-require_once '../app/models/AboutModel.php';
+require_once '../app/models/AboutPageModel.php';
 require_once '../app/models/GalleryModel.php';
 require_once '../app/controllers/BaseController.php';
 
@@ -12,8 +12,9 @@ class AboutPageController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
-    $this->about = new AboutModel();
+    $this->about = new AboutPageModel();
     $this->gallery = new GalleryModel();
   }
 

@@ -1,8 +1,8 @@
 <?php
-require_once '../app/models/SettingsModel.php';
+require_once '../app/models/SettingsPageModel.php';
 require_once '../app/controllers/BaseController.php';
 
-class SettingsController extends BaseController
+class SettingsPageController extends BaseController
 {
   private $settings;
 
@@ -10,8 +10,9 @@ class SettingsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
-    $this->settings = new SettingsModel();
+    $this->settings = new SettingsPageModel();
   }
 
   public function index()
@@ -19,7 +20,7 @@ class SettingsController extends BaseController
     $page_title = 'Pengaturan Global';
     $page_breadcrumb = ['System', 'Pengaturan Global'];
 
-    include '../app/views/settings.php';
+    include '../app/views/settings-page.php';
   }
 
   // Get all settings

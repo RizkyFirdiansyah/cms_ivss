@@ -13,7 +13,7 @@ require_once '../app/controllers/NewsController.php';
 require_once '../app/controllers/CategoryController.php';
 require_once '../app/controllers/GalleryController.php';
 require_once '../app/controllers/PublicationsController.php';
-require_once '../app/controllers/SettingsController.php';
+require_once '../app/controllers/SettingsPageController.php';
 require_once '../app/controllers/HomePageController.php';
 require_once '../app/controllers/AboutPageController.php';
 require_once '../app/controllers/MemberPageController.php';
@@ -188,15 +188,15 @@ switch ($url) {
     break;
 
   case 'settings':
-    (new SettingsController())->index();
+    (new SettingsPageController())->index();
     break;
 
   case 'settings/read':
-    (new SettingsController())->getAll();
+    (new SettingsPageController())->getAll();
     break;
 
   case 'settings/update':
-    (new SettingsController())->update();
+    (new SettingsPageController())->update();
     break;
 
   case 'home':

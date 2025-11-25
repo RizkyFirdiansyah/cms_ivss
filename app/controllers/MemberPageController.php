@@ -15,6 +15,7 @@ class MemberPageController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $db = new Database();
     $this->conn = $db->getConnection();

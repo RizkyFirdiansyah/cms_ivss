@@ -10,6 +10,7 @@ class CategoryController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->categoryModel = new CategoryModel();
   }
