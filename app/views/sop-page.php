@@ -31,10 +31,10 @@
           <div class="card">
             <div class="card-header pb-0">
               <div class="d-flex justify-content-between align-items-center">
-                <h5 class="m-0">Manajemen Konten SOP</h5>
+                <h5 class="m-0">Manajemen Halaman SOP</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-sop">
-                    <i class="fas fa-save me-1"></i> Simpan Semua Konten
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -75,37 +75,127 @@
                   </div>
                 </div>
 
-                <!-- Main Content Section -->
+                <!-- SOP Items Section -->
                 <div class="card m-4">
-                  <h6 class="me-2 mb-0 pb-0 py-4 mx-4 text-primary"><i class="fas fa-file-alt me-2"></i>Konten Utama SOP</h6>
+                  <h6 class="me-2 mb-0 pb-0 py-4 mx-4 text-primary"><i class="fas fa-list-alt me-2"></i>Item SOP & Layanan</h6>
                   <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3">
-                          <label class="form-label">Judul Konten</label>
-                          <input type="text" name="sop_main_title" class="form-control" placeholder="Prosedur Operasional Standar">
+                    <!-- SOP Items Accordion -->
+                    <div class="accordion" id="sopItemsAccordion">
+                      <!-- SOP Item 1 -->
+                      <div class="accordion-item">
+                        <div class="accordion-header d-flex align-items-center" id="sopItemHeading1">
+                          <button class="accordion-button gap-3 d-flex justify-content-between align-items-center collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sopItemCollapse1" aria-expanded="true" aria-controls="sopItemCollapse1">
+                            <i class="fas fa-file-alt text-primary"></i>
+                            <span id="sop-item-1-preview-title">SOP 1</span>
+                          </button>
+                          <i class="fa-solid fa-angle-down"></i>
+                        </div>
+                        <div id="sopItemCollapse1" class="accordion-collapse collapse show" aria-labelledby="sopItemHeading1" data-bs-parent="#sopItemsAccordion">
+                          <div class="accordion-body">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Judul SOP 1</label>
+                                  <input type="text" name="sop_1_title" class="form-control sop-item-title-input" placeholder="Contoh: SOP Penggunaan Lab" data-item="1">
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Link Dokumen SOP</label>
+                                  <input type="url" name="sop_1_document_link" class="form-control" placeholder="https://drive.google.com/...">
+                                  <div class="form-text text-xs">Link Google Drive untuk dokumen SOP lengkap</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-12">
+                                <div class="mb-3">
+                                  <label class="form-label">Deskripsi SOP 1</label>
+                                  <textarea name="sop_1_description" class="form-control" rows="3" placeholder="Deskripsi singkat tentang SOP ini..."></textarea>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div class="col-md-6">
-                        <div class="mb-3">
-                          <label class="form-label">Gambar Konten</label>
-                          <input type="file" name="sop_main_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
-                          <div class="form-text text-xs">Format: JPG, PNG, GIF, WebP (Maks. 2MB)</div>
-                          <div class="mt-2" id="sop-main-image-preview">
-                            <!-- Main content image preview -->
+
+                      <!-- SOP Item 2 -->
+                      <div class="accordion-item">
+                        <div class="accordion-header d-flex align-items-center" id="sopItemHeading2">
+                          <button class="accordion-button gap-3 d-flex justify-content-between align-items-center collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sopItemCollapse2" aria-expanded="false" aria-controls="sopItemCollapse2">
+                            <i class="fas fa-file-contract text-primary"></i>
+                            <span id="sop-item-2-preview-title">SOP 2</span>
+                          </button>
+                          <i class="fa-solid fa-angle-down"></i>
+                        </div>
+                        <div id="sopItemCollapse2" class="accordion-collapse collapse" aria-labelledby="sopItemHeading2" data-bs-parent="#sopItemsAccordion">
+                          <div class="accordion-body">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Judul SOP 2</label>
+                                  <input type="text" name="sop_2_title" class="form-control sop-item-title-input" placeholder="Contoh: SOP Keselamatan Kerja" data-item="2">
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Link Dokumen SOP</label>
+                                  <input type="url" name="sop_2_document_link" class="form-control" placeholder="https://drive.google.com/...">
+                                  <div class="form-text text-xs">Link Google Drive untuk dokumen SOP lengkap</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-12">
+                                <div class="mb-3">
+                                  <label class="form-label">Deskripsi SOP 2</label>
+                                  <textarea name="sop_2_description" class="form-control" rows="3" placeholder="Deskripsi singkat tentang SOP ini..."></textarea>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- SOP Item 3 -->
+                      <div class="accordion-item">
+                        <div class="accordion-header d-flex align-items-center" id="sopItemHeading3">
+                          <button class="accordion-button gap-3 d-flex justify-content-between align-items-center collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sopItemCollapse3" aria-expanded="false" aria-controls="sopItemCollapse3">
+                            <i class="fas fa-file-signature text-primary"></i>
+                            <span id="sop-item-3-preview-title">SOP 3</span>
+                          </button>
+                          <i class="fa-solid fa-angle-down"></i>
+                        </div>
+                        <div id="sopItemCollapse3" class="accordion-collapse collapse" aria-labelledby="sopItemHeading3" data-bs-parent="#sopItemsAccordion">
+                          <div class="accordion-body">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Judul SOP 3</label>
+                                  <input type="text" name="sop_3_title" class="form-control sop-item-title-input" placeholder="Contoh: SOP Penggunaan Peralatan" data-item="3">
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                  <label class="form-label">Link Dokumen SOP</label>
+                                  <input type="url" name="sop_3_document_link" class="form-control" placeholder="https://drive.google.com/...">
+                                  <div class="form-text text-xs">Link Google Drive untuk dokumen SOP lengkap</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-12">
+                                <div class="mb-3">
+                                  <label class="form-label">Deskripsi SOP 3</label>
+                                  <textarea name="sop_3_description" class="form-control" rows="3" placeholder="Deskripsi singkat tentang SOP ini..."></textarea>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-12">
-                        <div class="mb-3">
-                          <label class="form-label">Deskripsi/Konten SOP</label>
-                          <textarea name="sop_main_content" class="form-control" rows="8" placeholder="Masukkan deskripsi lengkap tentang Standard Operating Procedure laboratorium..."></textarea>
-                          <div class="form-text text-xs">Tuliskan prosedur operasional standar dalam bentuk paragraf yang jelas dan terstruktur</div>
-                        </div>
-                      </div>
-                    </div>
+                    <!-- End SOP Items Accordion -->
                   </div>
                 </div>
               </form>
@@ -164,7 +254,7 @@
     // Function untuk menampilkan preview gambar yang sudah ada
     function showExistingImagePreviews(contents) {
       const imageFields = [
-        'sop_header_image', 'sop_main_image'
+        'sop_header_image'
       ];
 
       imageFields.forEach(field => {
@@ -180,6 +270,13 @@
       });
     }
 
+    // Update SOP item title preview in real-time
+    $(document).on('input', '.sop-item-title-input', function() {
+      const itemNumber = $(this).data('item');
+      const title = $(this).val() || `SOP ${itemNumber}`;
+      $(`#sop-item-${itemNumber}-preview-title`).text(title);
+    });
+
     // Read SOP Data
     function readSopData() {
       $.ajax({
@@ -187,42 +284,49 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('SOP contents response:', res);
           if (res.success && res.data) {
-            // Header Section
-            $('#form-sop input[name="sop_header_title"]').val(res.data.header?.title || '');
-            $('#form-sop input[name="sop_header_subtitle"]').val(res.data.header?.subtitle || '');
+            const data = res.data;
 
-            // Main Content Section
-            $('#form-sop input[name="sop_main_title"]').val(res.data.main_content?.title || '');
-            $('#form-sop textarea[name="sop_main_content"]').val(res.data.main_content?.content || '');
+            // Header Section
+            $('#form-sop input[name="sop_header_title"]').val(data.header?.title || '');
+            $('#form-sop input[name="sop_header_subtitle"]').val(data.header?.subtitle || '');
+
+            // SOP Items
+            if (data.sop_items && data.sop_items.length >= 3) {
+              $('#form-sop input[name="sop_1_title"]').val(data.sop_items[0]?.title || '');
+              $('#form-sop textarea[name="sop_1_description"]').val(data.sop_items[0]?.description || '');
+              $('#form-sop input[name="sop_1_document_link"]').val(data.sop_items[0]?.document_link || '');
+
+              $('#form-sop input[name="sop_2_title"]').val(data.sop_items[1]?.title || '');
+              $('#form-sop textarea[name="sop_2_description"]').val(data.sop_items[1]?.description || '');
+              $('#form-sop input[name="sop_2_document_link"]').val(data.sop_items[1]?.document_link || '');
+
+              $('#form-sop input[name="sop_3_title"]').val(data.sop_items[2]?.title || '');
+              $('#form-sop textarea[name="sop_3_description"]').val(data.sop_items[2]?.description || '');
+              $('#form-sop input[name="sop_3_document_link"]').val(data.sop_items[2]?.document_link || '');
+            }
 
             // Show existing images
-            if (res.data.header || res.data.main_content) {
+            if (data.header) {
               const contents = {
                 sop_header_image: {
-                  value: res.data.header?.image_path || ''
-                },
-                sop_main_image: {
-                  value: res.data.main_content?.image_path || ''
+                  value: data.header?.image_path || ''
                 }
               };
               showExistingImagePreviews(contents);
             }
 
-            console.log('Data SOP berhasil dimuat ke form');
+            // Update SOP item titles preview
+            for (let i = 1; i <= 3; i++) {
+              const title = data.sop_items?.[i - 1]?.title || `SOP ${i}`;
+              $(`#sop-item-${i}-preview-title`).text(title);
+            }
+
           } else {
             showAlert('Gagal memuat data konten SOP', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten SOP.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -241,7 +345,6 @@
 
       const formData = new FormData($('#form-sop')[0]);
 
-      // Kirim semua data sekaligus
       $.ajax({
         url: BASE_URL + '/sop-page/update',
         method: 'POST',
@@ -261,7 +364,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten SOP.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
