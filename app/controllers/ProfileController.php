@@ -7,13 +7,14 @@ class ProfileController extends BaseController
 {
 
   private $id_user;
-  protected $upload_dir = __DIR__ . '/../../public/uploads/';
+  protected $upload_dir = __DIR__ . '/../../public/uploads/profile/';
 
 
   public function __construct()
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->profileModel = new ProfileModel();
     $this->id_user = $this->user['id'];
@@ -25,7 +26,7 @@ class ProfileController extends BaseController
     $user = $this->user;
 
     $foto_path = !empty($user['photo'])
-      ? BASE_URL . '/public/uploads/' . htmlspecialchars($user['photo'])
+      ? BASE_URL . '/public/uploads/profile/' . htmlspecialchars($user['photo'])
       : BASE_URL . '/public/assets/img/default-avatar.png';
 
     $status_message = $_SESSION['status_message'] ?? null;
@@ -181,9 +182,7 @@ class ProfileController extends BaseController
   // Handle File Upload
   private function handleFileUpload($file)
   {
-    $upload_dir = 'uploads/';
-
-    // FIX PATH
+    $upload_dir = 'uploads/profile/';
     $upload_path_full = __DIR__ . '/../../public/' . $upload_dir;
 
     // Pastikan folder ada

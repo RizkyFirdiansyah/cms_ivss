@@ -187,7 +187,7 @@
                         <div class="card card-profile">
                             <div class="row justify-content-center mt-3">
                                 <div class="col-12 text-center">
-                                    <img src="<?= BASE_URL . '/uploads/' . ($user['photo'] ?? '') ?>" class="rounded-circle img-fluid border border-2 border-white shadow" style="width: 150px; height: 150px; object-fit: cover">
+                                    <img src="<?= BASE_URL . '/uploads/profile/' . ($user['photo'] ?? '') ?>" class="rounded-circle img-fluid border border-2 border-white shadow" style="width: 150px; height: 150px; object-fit: cover">
                                 </div>
                             </div>
 

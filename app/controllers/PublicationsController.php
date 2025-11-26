@@ -12,6 +12,7 @@ class PublicationsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->publication = new PublicationsModel();
     $this->category = new CategoryModel();
@@ -66,7 +67,12 @@ class PublicationsController extends BaseController
       // Handle categories array 
       $categoryIds = [];
       if (!empty($_POST["categories"])) {
-        $categoryIds = is_array($_POST["categories"]) ? $_POST["categories"] : [];
+        // Parse JSON string jika categories dikirim sebagai string
+        if (is_string($_POST["categories"])) {
+          $categoryIds = json_decode($_POST["categories"], true) ?: [];
+        } else {
+          $categoryIds = $_POST["categories"];
+        }
 
         // Validasi IDs integer
         $categoryIds = array_map('intval', $categoryIds);
@@ -118,12 +124,20 @@ class PublicationsController extends BaseController
       // Validasi categories
       $categoryIds = [];
       if (!empty($_POST["categories"])) {
-        $categoryIds = is_array($_POST["categories"]) ? $_POST["categories"] : [];
+        // Parse JSON string jika categories dikirim sebagai string
+        if (is_string($_POST["categories"])) {
+          $categoryIds = json_decode($_POST["categories"], true) ?: [];
+        } else {
+          $categoryIds = $_POST["categories"];
+        }
 
         // Pastikan IDs adalah integer
         $categoryIds = array_map('intval', $categoryIds);
         $categoryIds = array_filter($categoryIds);
       }
+
+      // Dapatkan data existing untuk referensi
+      $existing = $this->publication->getById($id);
 
       // Simpan data ke database
       $save = $this->publication->savePublication([

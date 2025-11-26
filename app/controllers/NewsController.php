@@ -12,6 +12,7 @@ class NewsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
+    parent::requireRole('kepala');
 
     $this->news = new NewsModel();
     $this->category = new CategoryModel();
