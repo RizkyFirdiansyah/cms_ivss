@@ -1,22 +1,12 @@
 <?php
+require_once '../app/controllers/BasePageController.php';
 require_once '../app/models/SopPageModel.php';
-require_once '../app/controllers/BaseController.php';
 
-class SopPageController extends BaseController
+class SopPageController extends BasePageController
 {
-  private $conn;
-  private $sopPage;
-
   public function __construct()
   {
-    parent::__construct();
-    parent::requireLogin();
-    parent::requireRole('kepala');
-
-    $db = new Database();
-    $this->conn = $db->getConnection();
-
-    $this->sopPage = new SopPageModel();
+    parent::__construct(new SopPageModel(), 'uploads/sop/');
   }
 
   public function index()
@@ -27,12 +17,12 @@ class SopPageController extends BaseController
     include '../app/views/sop-page.php';
   }
 
-  // Get SOP page contents (header dan main content)
+  // Get SOP page contents (header dan main content) - OVERRIDE
   public function getContents()
   {
     try {
-      $header = $this->sopPage->getSopHeader();
-      $mainContent = $this->sopPage->getSopMainContent();
+      $header = $this->pageModel->getSopHeader();
+      $mainContent = $this->pageModel->getSopMainContent();
 
       $contents = [
         'header' => $header,
@@ -52,7 +42,7 @@ class SopPageController extends BaseController
     }
   }
 
-  // Update all SOP contents at once (sesuai dengan views)
+  // Update all SOP contents at once
   public function update()
   {
     $user = $this->user;
@@ -66,13 +56,13 @@ class SopPageController extends BaseController
 
     try {
       // Handle file uploads untuk semua section
-      $uploadResult = $this->handleAllFileUploads();
+      $uploadResult = $this->handleFileUploads();
       $uploadedFiles = $uploadResult['uploadedFiles'];
       $filesToDelete = $uploadResult['filesToDelete'];
 
       // Dapatkan data saat ini untuk mempertahankan gambar yang tidak diubah
-      $currentHeader = $this->sopPage->getSopHeader();
-      $currentMain = $this->sopPage->getSopMainContent();
+      $currentHeader = $this->pageModel->getSopHeader();
+      $currentMain = $this->pageModel->getSopMainContent();
 
       // Prepare header data - pertahankan gambar lama jika tidak ada upload baru
       $headerData = [
@@ -89,7 +79,7 @@ class SopPageController extends BaseController
       ];
 
       // Gunakan method yang menyimpan semua data sekaligus
-      $success = $this->sopPage->saveAllSopContents($headerData, $mainData, $user['id']);
+      $success = $this->pageModel->saveAllSopContents($headerData, $mainData, $user['id']);
 
       if ($success) {
         // Hapus file lama hanya setelah sukses save ke database
@@ -123,14 +113,14 @@ class SopPageController extends BaseController
   }
 
   // Handle file uploads for all sections
-  private function handleAllFileUploads()
+  protected function handleFileUploads()
   {
     $uploadedFiles = [];
     $filesToDelete = [];
 
     // Get current data untuk semua section
-    $currentHeader = $this->sopPage->getSopHeader();
-    $currentMain = $this->sopPage->getSopMainContent();
+    $currentHeader = $this->pageModel->getSopHeader();
+    $currentMain = $this->pageModel->getSopMainContent();
 
     // Header background image
     if (!empty($_FILES['sop_header_image']['name'])) {
@@ -141,10 +131,7 @@ class SopPageController extends BaseController
         // Simpan info file lama untuk dihapus nanti setelah sukses save
         $oldImage = $_POST['old_sop_header_image'] ?? ($currentHeader['image_path'] ?? '');
         if (!empty($oldImage) && $oldImage !== $headerImage) {
-          $filesToDelete[] = [
-            'path' => $oldImage,
-            'type' => 'sop_header'
-          ];
+          $filesToDelete[] = $oldImage;
         }
       }
     }
@@ -158,10 +145,7 @@ class SopPageController extends BaseController
         // Simpan info file lama untuk dihapus nanti setelah sukses save
         $oldImage = $_POST['old_sop_main_image'] ?? ($currentMain['image_path'] ?? '');
         if (!empty($oldImage) && $oldImage !== $mainImage) {
-          $filesToDelete[] = [
-            'path' => $oldImage,
-            'type' => 'sop_main'
-          ];
+          $filesToDelete[] = $oldImage;
         }
       }
     }
@@ -170,84 +154,5 @@ class SopPageController extends BaseController
       'uploadedFiles' => $uploadedFiles,
       'filesToDelete' => $filesToDelete
     ];
-  }
-
-  // Handle single file upload
-  private function handleFileUpload($file, $prefix = '')
-  {
-    $upload_dir = 'uploads/sop/';
-    $upload_path_full = __DIR__ . '/../../public/' . $upload_dir;
-
-    if (!is_dir($upload_path_full)) {
-      mkdir($upload_path_full, 0777, true);
-    }
-
-    $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-    if (!in_array($ext, $allowed_types)) {
-      error_log("Invalid file type for {$prefix}: {$ext}");
-      return false;
-    }
-
-    if ($file['size'] > 5 * 1024 * 1024) {
-      error_log("File too large for {$prefix}: {$file['size']} bytes");
-      return false;
-    }
-
-    // Gunakan user untuk ID user yang login
-    $new_file_name = $prefix . '_' . $this->user['id'] . '_' . time() . '.' . $ext;
-    $target_path = $upload_path_full . $new_file_name;
-
-    if (move_uploaded_file($file['tmp_name'], $target_path)) {
-      return $new_file_name;
-    }
-
-    error_log("Failed to move uploaded file for {$prefix}");
-    return false;
-  }
-
-  // Delete old files after successful database update
-  private function deleteOldFiles($filesToDelete)
-  {
-    foreach ($filesToDelete as $fileInfo) {
-      $this->deleteFileFromServer($fileInfo['path'], $fileInfo['type']);
-    }
-  }
-
-  // Rollback uploaded files if operation fails
-  private function rollbackUploadedFiles($uploadedFiles)
-  {
-    foreach ($uploadedFiles as $filename) {
-      if ($filename !== false) {
-        $this->deleteFileFromServer($filename, 'rollback');
-      }
-    }
-  }
-
-  // Delete file from server
-  private function deleteFileFromServer($filename, $type = 'general')
-  {
-    if (empty($filename)) {
-      error_log("Delete File: Filename kosong untuk {$type}");
-      return true;
-    }
-
-    $file_path = 'uploads/sop/' . $filename;
-    $full_path = __DIR__ . '/../../public/' . $file_path;
-
-    if (file_exists($full_path) && is_file($full_path)) {
-      if (unlink($full_path)) {
-        error_log("✅ File {$type} berhasil dihapus: " . $full_path);
-        return true;
-      } else {
-        error_log("❌ Gagal menghapus file {$type}: " . $full_path);
-        return false;
-      }
-    } else {
-      error_log("⚠️ File {$type} tidak ditemukan: " . $full_path);
-    }
-
-    return true;
   }
 }

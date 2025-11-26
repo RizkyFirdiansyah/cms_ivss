@@ -34,7 +34,7 @@
                 <h5 class="m-0">Manajemen Halaman Fasilitas</h5>
                 <div>
                   <button class="btn btn-sm btn-success mb-0" id="btn-save-facility">
-                    <i class="fas fa-save me-1"></i> Simpan Konten
+                    <i class="fas fa-save me-1"></i> Simpan
                   </button>
                 </div>
               </div>
@@ -42,8 +42,6 @@
 
             <div class="card-body p-0">
               <form id="form-facility" enctype="multipart/form-data">
-                <!-- Input hidden untuk file lama -->
-                <input type="hidden" name="old_facility_header_image" id="old_facility_header_image" value="">
 
                 <!-- Header Section -->
                 <div class="card m-4">
@@ -80,23 +78,11 @@
 
                 <!-- Facilities Preview Section -->
                 <div class="card m-4">
-                  <h6 class="me-2 mb-0 pb-0 py-4 mx-4 text-primary"><i class="fas fa-flask me-2"></i>Preview Fasilitas</h6>
                   <div class="card-body">
-                    <div class="row">
-                      <div class="alert alert-warning text-white">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Data fasilitas diambil secara otomatis dari <strong>Management Fasilitas</strong>.
-                        <a href="<?= BASE_URL ?>/fasilitas" class="alert-link">Kelola fasilitas di sini</a>.
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-12">
-                        <div class="mb-3">
-                          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-preview-facilities">
-                            <i class="fas fa-eye me-1"></i> Preview Daftar Fasilitas
-                          </button>
-                        </div>
-                      </div>
+                    <div class="alert alert-warning text-white mb-0">
+                      <i class="fas fa-info-circle me-2"></i>
+                      <strong>Informasi:</strong> Konten fasilitas dikelola melalui <strong>Manajemen Fasilitas</strong>.
+                      <a href="<?= BASE_URL ?>/fasilitas" class="alert-link">Kelola fasilitas di sini</a>.
                     </div>
                   </div>
                 </div>
@@ -127,29 +113,6 @@
   </div>
   <!-- End Modal Alert -->
 
-  <!-- Facilities Preview Modal -->
-  <div class="modal fade" id="facilitiesModal" tabindex="-1" aria-labelledby="facilitiesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="facilitiesModalLabel">
-            <i class="fas fa-flask me-2"></i>Preview Fasilitas
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row" id="facilities-preview-container">
-            <!-- Facilities preview akan diisi via JavaScript -->
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- End Facilities Preview Modal -->
-
   <?php require_once 'includes/footer.php'; ?>
 
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
@@ -178,25 +141,18 @@
 
     // Function untuk menampilkan preview gambar yang sudah ada
     function showExistingImagePreviews(contents) {
-
-      const imageFields = ['facility_header_image'];
+      const imageFields = [
+        'facility_header_image'
+      ];
 
       imageFields.forEach(field => {
         const previewId = `${field.replace(/_/g, '-')}-preview`;
-        const hiddenInput = $(`input[name="old_${field}"]`);
-
         if (contents[field] && contents[field].value) {
-          // Set nilai input hidden untuk file lama
-          hiddenInput.val(contents[field].value);
-
-          // Tampilkan preview gambar
           $(`#${previewId}`).html(`
             <img src="${BASE_URL}/uploads/facility/${contents[field].value}" alt="Current ${field}" class="img-thumbnail" style="max-height: 120px;">
             <div class="form-text text-xs mt-1">Gambar saat ini</div>
           `);
         } else {
-          // Kosongkan input hidden jika tidak ada gambar
-          hiddenInput.val('');
           $(`#${previewId}`).html('<div class="text-muted text-xs">Belum ada gambar</div>');
         }
       });
@@ -234,93 +190,6 @@
       return text.substring(0, maxLength) + '...';
     }
 
-    function loadFacilitiesPreview() {
-      const modalElement = $('#facilitiesModal');
-      const myModal = bootstrap.Modal.getOrCreateInstance(modalElement);
-
-      $.ajax({
-        url: BASE_URL + '/fasilitas-page/allFasilitas',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          const container = $('#facilities-preview-container');
-          container.empty();
-
-          if (res.success) {
-            res.data.forEach((facility, index) => {
-              const shortContent = truncateText(facility.description, 100);
-
-              container.append(`
-                        <div class="col-lg-6 mb-4">
-                            <div class="card border-0 shadow-sm facility-card">
-                                ${facility.photo ? `
-                                    <img src="${BASE_URL}/uploads/facility/${facility.photo}" 
-                                        class="card-img-top" 
-                                        style="height: 150px; object-fit: cover;" 
-                                        alt="${facility.name}">
-                                ` : `
-                                    <div class="bg-light d-flex align-items-center justify-content-center rounded" 
-                                        style="height: 150px;">
-                                        <i class="fas fa-flask fa-3x text-muted"></i>
-                                    </div>
-                                `}
-                                <div class="card-body px-3 py-1">
-                                        <h6 class="card-title m-0 fw-bold text-dark">${facility.name}</h6>
-                                    
-                                    ${facility.description ? `
-                                        <p class="card-text text-xs text-muted">${shortContent}</p>
-                                    ` : '<p class="card-text text-xs text-muted">Tidak ada deskripsi</p>'}
-                                </div>
-                                <div class="card-footer p-2 mx-2">
-                                    <small class="text-muted">
-                                        <i class="fas fa-calendar me-1"></i>
-                                        ${facility.created_at ? new Date(facility.created_at).toLocaleDateString('id-ID') : 'Tanggal tidak tersedia'}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-            });
-
-          } else {
-            container.html(`
-                    <div class="col-12">
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-flask fa-3x mb-3"></i>
-                            <h5 class="mb-2">Belum ada fasilitas</h5>
-                            <p class="text-sm mb-0">Tambahkan fasilitas melalui menu <a href="${BASE_URL}/admin/facilities" class="text-primary">Facility Management</a></p>
-                        </div>
-                    </div>
-                `);
-          }
-          // Tampilkan modal setelah konten dimuat
-          myModal.show();
-        },
-        error: function(xhr) {
-          console.error('Error loading facilities:', xhr);
-          const container = $('#facilities-preview-container');
-          container.html(`
-                <div class="col-12">
-                    <div class="text-center text-danger py-5">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                        <h5 class="mb-2">Gagal memuat data fasilitas</h5>
-                        <p class="text-sm mb-0">Terjadi kesalahan saat mengambil data</p>
-                    </div>
-                </div>
-            `);
-
-          const modalElement = document.getElementById('facilitiesModal');
-          const myModal = bootstrap.Modal.getOrCreateInstance(modalElement);
-          myModal.show();
-        }
-      });
-    }
-
-    // Preview Facilities
-    $('#btn-preview-facilities').off('click').on('click', function() {
-      loadFacilitiesPreview();
-    });
-
     // Read Facility Data
     function readFacilityData() {
       $.ajax({
@@ -330,23 +199,23 @@
         success: function(res) {
           if (res.success && res.data) {
             // Header Section
-            $('#form-facility input[name="facility_header_title"]').val(res.data.facility_header_title?.value || '');
-            $('#form-facility input[name="facility_header_subtitle"]').val(res.data.facility_header_subtitle?.value || '');
+            $('#form-facility input[name="facility_header_title"]').val(res.data.header?.title || '');
+            $('#form-facility input[name="facility_header_subtitle"]').val(res.data.header?.subtitle || '');
 
             // Show existing images
-            showExistingImagePreviews(res.data);
+            if (res.data.header) {
+              const contents = {
+                facility_header_image: {
+                  value: res.data.header?.image_path || ''
+                }
+              };
+              showExistingImagePreviews(contents);
+            }
           } else {
             showAlert('Gagal memuat data konten fasilitas', 'error');
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data konten fasilitas.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -384,7 +253,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan konten fasilitas.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;

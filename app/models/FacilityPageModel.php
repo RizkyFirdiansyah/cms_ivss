@@ -1,124 +1,54 @@
 <?php
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../models/BasePageModel.php';
 
-class FacilityPageModel
+class FacilityPageModel extends BasePageModel
 {
-  private $conn;
-
   public function __construct()
   {
-    $db = new Database();
-    $this->conn = $db->getConnection();
+    parent::__construct('facility', 'Fasilitas');
   }
 
-  // Get page ID by slug
-  public function getPageId($slug)
+  // Get facility header data (title, subtitle, image)
+  public function getFacilityHeader()
   {
     try {
-      $query = "SELECT id FROM pages WHERE slug = :slug";
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':slug', $slug, PDO::PARAM_STR);
-      $stmt->execute();
+      $contents = $this->getPageContents();
 
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['id'] : null;
+      return [
+        'title' => $contents['facility_header_title']['value'] ?? 'Fasilitas',
+        'subtitle' => $contents['facility_header_subtitle']['value'] ?? 'Fasilitas laboratorium yang tersedia',
+        'image_path' => $contents['facility_header_image']['value'] ?? ''
+      ];
     } catch (PDOException $e) {
-      error_log("DB Error (getPageId): " . $e->getMessage());
-      return null;
+      error_log("DB Error (getFacilityHeader): " . $e->getMessage());
+      return [
+        'title' => 'Fasilitas',
+        'subtitle' => 'Fasilitas laboratorium yang tersedia',
+        'image_path' => ''
+      ];
     }
   }
 
-  // Get facility page contents
-  public function getFacilityPageContents()
+  // Save facility header data
+  public function saveFacilityHeader($headerData, $userId)
   {
-    try {
-      $pageId = $this->getPageId('facility');
-      if (!$pageId) return [];
+    $contents = [
+      'facility_header_title' => ['type' => 'text', 'value' => $headerData['title'] ?? ''],
+      'facility_header_subtitle' => ['type' => 'text', 'value' => $headerData['subtitle'] ?? ''],
+      'facility_header_image' => ['type' => 'image', 'value' => $headerData['image_path'] ?? '']
+    ];
 
-      $query = "SELECT content_key, content_type, content_value 
-                FROM page_contents 
-                WHERE page_id = :page_id 
-                ORDER BY content_key";
-
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->execute();
-
-      $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-      // Convert to associative array
-      $contents = [];
-      foreach ($results as $row) {
-        $contents[$row['content_key']] = [
-          'type' => $row['content_type'],
-          'value' => $row['content_value']
-        ];
-      }
-
-      return $contents;
-    } catch (PDOException $e) {
-      error_log("DB Error (getFacilityPageContents): " . $e->getMessage());
-      return [];
-    }
+    return $this->saveMultipleContents($contents, $userId);
   }
 
-  // Save multiple facility page contents
-  public function saveMultipleFacilityContents($contents, $userId)
+  // Implement abstract method dari BasePageModel
+  public function getHeader()
   {
-    $this->conn->beginTransaction();
-
-    try {
-      $pageId = $this->getPageId('facility');
-      if (!$pageId) {
-        $pageId = $this->createFacilityPage();
-        if (!$pageId) {
-          $this->conn->rollBack();
-          return false;
-        }
-      }
-
-      $query = "INSERT INTO page_contents (page_id, user_id, content_key, content_type, content_value) 
-                VALUES (:page_id, :user_id, :content_key, :content_type, :content_value)
-                ON CONFLICT (page_id, content_key) 
-                DO UPDATE SET 
-                  content_value = EXCLUDED.content_value,
-                  content_type = EXCLUDED.content_type,
-                  user_id = EXCLUDED.user_id,
-                  last_updated = CURRENT_TIMESTAMP";
-
-      $stmt = $this->conn->prepare($query);
-
-      foreach ($contents as $key => $data) {
-        $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-        $stmt->bindValue(':content_type', $data['type'] ?? 'text', PDO::PARAM_STR);
-        $stmt->bindValue(':content_value', $data['value'] ?? '', PDO::PARAM_STR);
-        $stmt->execute();
-      }
-
-      $this->conn->commit();
-      return true;
-    } catch (PDOException $e) {
-      $this->conn->rollBack();
-      error_log("DB Error (saveMultipleFacilityContents): " . $e->getMessage());
-      return false;
-    }
+    return $this->getFacilityHeader();
   }
 
-  // Create facility page if not exists
-  private function createFacilityPage()
+  public function saveHeader($headerData, $userId)
   {
-    try {
-      $query = "INSERT INTO pages (name, slug) VALUES ('Facility', 'facility') RETURNING id";
-      $stmt = $this->conn->prepare($query);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['id'] : null;
-    } catch (PDOException $e) {
-      error_log("DB Error (createFacilityPage): " . $e->getMessage());
-      return null;
-    }
+    return $this->saveFacilityHeader($headerData, $userId);
   }
 }

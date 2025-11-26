@@ -33,7 +33,7 @@
               <div class="d-flex justify-content-between align-items-center">
                 <h5 class="m-0">Pengaturan Global</h5>
                 <button class="btn btn-sm btn-success mb-0" id="btn-save-settings">
-                  <i class="fas fa-save me-1"></i> Simpan Semua Pengaturan
+                  <i class="fas fa-save me-1"></i> Simpan
                 </button>
               </div>
             </div>
@@ -289,7 +289,6 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log('Settings data response:', res);
           if (res.success && res.data) {
             $('#form-settings input[name="site_name"]').val(res.data.site_name.value || '');
             $('#form-settings input[name="contact_address"]').val(res.data.contact_address.value || '');
@@ -313,13 +312,6 @@
           }
         },
         error: function(xhr, status, error) {
-          console.error('Error details:', {
-            xhr: xhr,
-            status: status,
-            error: error,
-            responseText: xhr.responseText
-          });
-
           let errorMessage = 'Terjadi kesalahan saat membaca data pengaturan.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
@@ -337,12 +329,6 @@
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
       const formData = new FormData($('#form-settings')[0]);
-
-      // Debug: Log semua data yang akan dikirim
-      console.log('Form data yang akan dikirim:');
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ', pair[1]);
-      }
 
       $.ajax({
         url: BASE_URL + '/settings/update',
@@ -363,7 +349,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Save error:', xhr);
           let errorMessage = 'Terjadi kesalahan saat menyimpan pengaturan.';
           if (xhr.responseJSON && xhr.responseJSON.message) {
             errorMessage = xhr.responseJSON.message;
