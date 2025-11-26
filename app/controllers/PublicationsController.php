@@ -1,10 +1,12 @@
 <?php
 require_once '../app/models/PublicationsModel.php';
+require_once '../app/models/CategoryModel.php';
 require_once '../app/controllers/BaseController.php';
 
 class PublicationsController extends BaseController
 {
   private $publication;
+  private $category;
 
   public function __construct()
   {
@@ -13,6 +15,7 @@ class PublicationsController extends BaseController
     parent::requireRole('kepala');
 
     $this->publication = new PublicationsModel();
+    $this->category = new CategoryModel();
   }
 
   public function index()
@@ -27,15 +30,17 @@ class PublicationsController extends BaseController
   public function getList()
   {
     $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
+    $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
 
     $offset = ($page - 1) * $limit;
 
-    $data = $this->publication->getPublications($limit, $offset, $search);
-    $total = $this->publication->countPublications($search);
+    $data = $this->publication->getPublications($limit, $offset, $search, $category_id);
+    $total = $this->publication->countPublications($search, $category_id);
 
     $response_data = [
+      'success' => true,
       'data' => $data,
       'total' => $total,
     ];
@@ -43,29 +48,63 @@ class PublicationsController extends BaseController
     $this->jsonResponse($response_data);
   }
 
+  // Get All Categories (dropdown)
+  public function getCategories()
+  {
+    $categories = $this->category->getAll();
+    $this->jsonResponse([
+      'success' => true,
+      'data' => $categories
+    ]);
+  }
+
   // Create New Publication
   public function create()
   {
     $user = $this->user;
+
     try {
-      $link = null;
+      // Handle categories array 
+      $categoryIds = [];
+      if (!empty($_POST["categories"])) {
+        // Parse JSON string jika categories dikirim sebagai string
+        if (is_string($_POST["categories"])) {
+          $categoryIds = json_decode($_POST["categories"], true) ?: [];
+        } else {
+          $categoryIds = $_POST["categories"];
+        }
+
+        // Validasi IDs integer
+        $categoryIds = array_map('intval', $categoryIds);
+        $categoryIds = array_filter($categoryIds);
+      }
 
       $save = $this->publication->savePublication([
         "user_id" => $user["id"],
-        "title" => $_POST["title"],
-        "link" => $_POST["link"],
-        "publication_year" => $_POST["publication_year"]
+        "title" => $_POST["title"] ?? '',
+        "link" => $_POST["link"] ?? '',
+        "publication_year" => $_POST["publication_year"] ?? date('Y'),
+        "categories" => $categoryIds  // Array of category IDs
       ]);
 
-      $this->jsonResponse([
-        "success" => $save,
-        "message" => $save ? "Publikasi berhasil ditambahkan." : "Gagal menambah publikasi."
-      ]);
+      if ($save) {
+        $this->jsonResponse([
+          "success" => true,
+          "message" => "Publikasi berhasil ditambahkan.",
+          "id" => $save
+        ]);
+      } else {
+        $this->jsonResponse([
+          "success" => false,
+          "message" => "Gagal menambah publikasi."
+        ]);
+      }
     } catch (Exception $e) {
+      error_log("Create Publication Exception: " . $e->getMessage());
       $this->jsonResponse([
         "success" => false,
-        "message" => $e->getMessage()
-      ]);
+        "message" => "Terjadi kesalahan sistem."
+      ], 500);
     }
   }
 
@@ -76,56 +115,42 @@ class PublicationsController extends BaseController
       $id = $_POST["id"] ?? null;
 
       if (!$id) {
-        return $this->jsonResponse(["success" => false, "message" => "ID publikasi tidak valid."], 400);
+        return $this->jsonResponse([
+          "success" => false,
+          "message" => "ID publikasi tidak valid."
+        ], 400);
       }
 
-      // 1. Ambil data lama
+      // Validasi categories
+      $categoryIds = [];
+      if (!empty($_POST["categories"])) {
+        // Parse JSON string jika categories dikirim sebagai string
+        if (is_string($_POST["categories"])) {
+          $categoryIds = json_decode($_POST["categories"], true) ?: [];
+        } else {
+          $categoryIds = $_POST["categories"];
+        }
+
+        // Pastikan IDs adalah integer
+        $categoryIds = array_map('intval', $categoryIds);
+        $categoryIds = array_filter($categoryIds);
+      }
+
+      // Dapatkan data existing untuk referensi
       $existing = $this->publication->getById($id);
 
-      if (!$existing) {
-        return $this->jsonResponse(["success" => false, "message" => "Publikasi tidak ditemukan."], 404);
-      }
-
-      $link_old_name = $existing["link"];
-      $link_new_name = $link_old_name;
-
-      // 2. Cek apakah ada file baru yang diunggah
-      if (!empty($_FILES["link"]["name"])) {
-        // A. Upload file baru
-        if ($link_new_name === false) {
-          return $this->jsonResponse(["success" => false, "message" => "Gagal mengunggah file baru. Format tidak didukung."], 400);
-        }
-
-        // B. HAPUS FILE LAMA dari server (jika file upload, bukan URL)
-        if ($link_old_name && $link_new_name !== $link_old_name && !filter_var($link_old_name, FILTER_VALIDATE_URL)) {
-          $old_file_path = $this->deleteFileFromServer($link_old_name);
-          if (file_exists($old_file_path)) {
-            unlink($old_file_path);
-          }
-        }
-      } elseif (!empty($_POST["link_url"])) {
-        $link_new_name = $_POST["link_url"];
-
-        // Hapus file lama jika sebelumnya adalah file upload
-        if ($link_old_name && !filter_var($link_old_name, FILTER_VALIDATE_URL)) {
-          $old_file_path = $this->deleteFileFromServer($link_old_name);
-          if (file_exists($old_file_path)) {
-            unlink($old_file_path);
-          }
-        }
-      }
-
-      // 3. Simpan data ke database
+      // Simpan data ke database
       $save = $this->publication->savePublication([
         "id" => $id,
-        "user_id" => $existing["user_id"],
-        "title" => $_POST["title"] ?? null,
-        "link" => $link_new_name,
-        "publication_year" => $_POST["publication_year"] ?? null
+        "user_id" => $this->user["id"],
+        "title" => $_POST["title"] ?? '',
+        "link" => $_POST["link"] ?? '',
+        "publication_year" => $_POST["publication_year"] ?? date('Y'),
+        "categories" => $categoryIds
       ]);
 
       $this->jsonResponse([
-        "success" => $save,
+        "success" => (bool)$save,
         "message" => $save ? "Publikasi berhasil diperbarui." : "Gagal update publikasi."
       ]);
     } catch (Exception $e) {
@@ -144,30 +169,13 @@ class PublicationsController extends BaseController
       $id = $_POST["id"] ?? null;
 
       if (!$id) {
-        return $this->jsonResponse(["success" => false, "message" => "ID publikasi tidak valid."], 400);
+        return $this->jsonResponse([
+          "success" => false,
+          "message" => "ID publikasi tidak valid."
+        ], 400);
       }
 
-      // 1. Ambil data publikasi
-      $existing = $this->publication->getById($id);
-
-      if (!$existing) {
-        return $this->jsonResponse(["success" => false, "message" => "Publikasi tidak ditemukan."], 404);
-      }
-
-      $link_name = $existing["link"];
-
-      // 2. Hapus data dari database
       $del = $this->publication->delete($id);
-
-      if ($del) {
-        // 3. Hapus file fisik dari server (jika file upload, bukan URL)
-        if ($link_name && !filter_var($link_name, FILTER_VALIDATE_URL)) {
-          $file_path = $this->deleteFileFromServer($link_name);
-          if (file_exists($file_path)) {
-            unlink($file_path);
-          }
-        }
-      }
 
       $this->jsonResponse([
         "success" => $del,
@@ -182,24 +190,30 @@ class PublicationsController extends BaseController
     }
   }
 
-  protected function deleteFileFromServer($file_name)
+  // Get Single Publication by ID
+  public function getDetail()
   {
-    if (empty($file_name) || strpos($file_name, 'default') !== false) {
-      return true;
+    $id = $_GET['id'] ?? null;
+
+    if (!$id) {
+      return $this->jsonResponse([
+        "success" => false,
+        "message" => "ID publikasi tidak valid."
+      ], 400);
     }
 
-    $file_path = __DIR__ . '/../../public/uploads/publications/' . $file_name;
+    $publication = $this->publication->getById($id);
 
-    if (file_exists($file_path) && is_file($file_path)) {
-      if (unlink($file_path)) {
-        error_log("File publikasi berhasil dihapus: " . $file_path);
-        return true;
-      } else {
-        error_log("Gagal menghapus file publikasi (Izin Ditolak): " . $file_path);
-        return false;
-      }
+    if (!$publication) {
+      return $this->jsonResponse([
+        "success" => false,
+        "message" => "Publikasi tidak ditemukan."
+      ], 404);
     }
 
-    return true;
+    $this->jsonResponse([
+      "success" => true,
+      "data" => $publication
+    ]);
   }
 }
