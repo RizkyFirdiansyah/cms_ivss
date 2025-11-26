@@ -1,61 +1,51 @@
 <?php
 require_once '../app/controllers/BasePageController.php';
-require_once '../app/models/SopPageModel.php';
+require_once '../app/models/PublicationPageModel.php';
 
-class SopPageController extends BasePageController
+class PublicationPageController extends BasePageController
 {
   public function __construct()
   {
-    parent::__construct(new SopPageModel(), 'uploads/sop/');
+    parent::__construct(new PublicationPageModel(), 'uploads/publication/');
   }
 
   public function index()
   {
-    $page_title = 'Manajemen Halaman SOP';
-    $page_breadcrumb = ['Pages', 'SOP'];
+    $page_title = 'Manajemen Halaman Publikasi';
+    $page_breadcrumb = ['Pages', 'Publikasi'];
 
-    include '../app/views/sop-page.php';
+    include '../app/views/publikasi-page.php';
   }
 
-  // OVERRIDE: Get all SOP contents (header dan SOP items)
+  // OVERRIDE: Get all publication page contents (bukan hanya header)
   public function getContents()
   {
     try {
-      $contents = $this->pageModel->getSopContents();
+      $contents = $this->pageModel->getPublicationPageContents();
 
       // Structure data sesuai dengan kebutuhan views
       $structuredData = [
         'header' => [
-          'title' => $contents['sop_header_title']['value'] ?? 'Standard Operating Procedure',
-          'subtitle' => $contents['sop_header_subtitle']['value'] ?? 'Prosedur operasional standar laboratorium',
-          'image_path' => $contents['sop_header_image']['value'] ?? ''
-        ],
-        'sop_items' => []
+          'title' => $contents['publication_header_title']['value'] ?? 'Publikasi',
+          'subtitle' => $contents['publication_header_subtitle']['value'] ?? 'Karya ilmiah dan hasil penelitian LAB IVSS',
+          'image_path' => $contents['publication_header_image']['value'] ?? ''
+        ]
       ];
-
-      // Add SOP items
-      for ($i = 1; $i <= 3; $i++) {
-        $structuredData['sop_items'][] = [
-          'title' => $contents["sop_{$i}_title"]['value'] ?? '',
-          'description' => $contents["sop_{$i}_description"]['value'] ?? '',
-          'document_link' => $contents["sop_{$i}_document_link"]['value'] ?? ''
-        ];
-      }
 
       $this->jsonResponse([
         'success' => true,
         'data' => $structuredData
       ]);
     } catch (Exception $e) {
-      error_log("Get SOP Contents Error: " . $e->getMessage());
+      error_log("Get Publication Page Contents Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
-        'message' => 'Gagal mengambil data konten SOP.'
+        'message' => 'Gagal mengambil data konten halaman publikasi.'
       ], 500);
     }
   }
 
-  // Update SOP contents - OVERRIDE method base
+  // Update publication page contents - OVERRIDE method base
   public function update()
   {
     $user = $this->user;
@@ -77,27 +67,20 @@ class SopPageController extends BasePageController
       $contentData = [];
 
       // Header Section
-      $this->addContentIfSet($contentData, 'sop_header_title', $_POST['sop_header_title'] ?? '');
-      $this->addContentIfSet($contentData, 'sop_header_subtitle', $_POST['sop_header_subtitle'] ?? '');
-
-      // SOP Items - 3 items
-      for ($i = 1; $i <= 3; $i++) {
-        $this->addContentIfSet($contentData, "sop_{$i}_title", $_POST["sop_{$i}_title"] ?? '');
-        $this->addContentIfSet($contentData, "sop_{$i}_description", $_POST["sop_{$i}_description"] ?? '');
-        $this->addContentIfSet($contentData, "sop_{$i}_document_link", $_POST["sop_{$i}_document_link"] ?? '');
-      }
+      $this->addContentIfSet($contentData, 'publication_header_title', $_POST['publication_header_title'] ?? '');
+      $this->addContentIfSet($contentData, 'publication_header_subtitle', $_POST['publication_header_subtitle'] ?? '');
 
       // Add uploaded files to content data
       foreach ($uploadedFiles as $key => $filename) {
         if ($filename !== false) {
           $contentData[$key] = [
-            'type' => 'text',
+            'type' => 'image',
             'value' => $filename
           ];
         }
       }
 
-      $success = $this->pageModel->saveMultipleSopContents($contentData, $user['id']);
+      $success = $this->pageModel->saveMultiplePublicationPageContents($contentData, $user['id']);
 
       if ($success) {
         // Hapus file lama hanya setelah sukses save ke database
@@ -105,7 +88,7 @@ class SopPageController extends BasePageController
 
         $this->jsonResponse([
           'success' => true,
-          'message' => 'Konten SOP berhasil diperbarui.'
+          'message' => 'Konten halaman publikasi berhasil diperbarui.'
         ]);
       } else {
         // Jika gagal save, hapus file yang baru diupload
@@ -113,7 +96,7 @@ class SopPageController extends BasePageController
 
         $this->jsonResponse([
           'success' => false,
-          'message' => 'Gagal memperbarui konten SOP.'
+          'message' => 'Gagal memperbarui konten halaman publikasi.'
         ], 500);
       }
     } catch (Exception $e) {
@@ -122,7 +105,7 @@ class SopPageController extends BasePageController
         $this->rollbackUploadedFiles($uploadResult['uploadedFiles']);
       }
 
-      error_log("Update SOP Error: " . $e->getMessage());
+      error_log("Update Publication Page Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
         'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
@@ -144,13 +127,8 @@ class SopPageController extends BasePageController
   // Determine content type based on key
   private function getContentType($key)
   {
-    $textareaKeys = [
-      'sop_1_description',
-      'sop_2_description',
-      'sop_3_description'
-    ];
-
-    return in_array($key, $textareaKeys) ? 'textarea' : 'text';
+    // Semua field untuk publication page adalah text
+    return 'text';
   }
 
   // Handle file uploads dengan management file lama yang aman
@@ -160,13 +138,13 @@ class SopPageController extends BasePageController
     $filesToDelete = [];
 
     // Header image
-    if (!empty($_FILES['sop_header_image']['name'])) {
-      $headerImage = $this->handleFileUpload($_FILES['sop_header_image'], 'sop_header');
+    if (!empty($_FILES['publication_header_image']['name'])) {
+      $headerImage = $this->handleFileUpload($_FILES['publication_header_image'], 'publication_header');
       if ($headerImage !== false) {
-        $uploadedFiles['sop_header_image'] = $headerImage;
+        $uploadedFiles['publication_header_image'] = $headerImage;
 
         // Simpan info file lama untuk dihapus nanti setelah sukses save
-        $oldHeaderImage = $this->pageModel->getSopContent('sop_header_image');
+        $oldHeaderImage = $this->pageModel->getPublicationPageContent('publication_header_image');
         if ($oldHeaderImage && $oldHeaderImage !== $headerImage) {
           $filesToDelete[] = $oldHeaderImage;
         }

@@ -20,6 +20,9 @@ require_once '../app/controllers/MemberPageController.php';
 require_once '../app/controllers/FacilityPageController.php';
 require_once '../app/controllers/SopPageController.php';
 require_once '../app/controllers/GalleryPageController.php';
+require_once '../app/controllers/NewsPageController.php';
+require_once '../app/controllers/PublicationPageController.php';
+require_once '../app/controllers/ResearchPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -291,6 +294,43 @@ switch ($url) {
 
   case 'galeri-page/update':
     (new GalleryPageController())->update();
+    break;
+
+  case 'berita-page':
+    (new NewsPageController())->index();
+    break;
+
+  case 'berita-page/read':
+    (new NewsPageController())->getContents();
+    break;
+
+  case 'berita-page/update':
+    (new NewsPageController())->update();
+    break;
+
+  case 'publikasi-page':
+    (new PublicationPageController())->index();
+    break;
+
+  case 'publikasi-page/read':
+    (new PublicationPageController())->getContents();
+    break;
+
+  case 'publikasi-page/update':
+    (new PublicationPageController())->update();
+    break;
+
+  case 'penelitian-page':
+    (new ResearchPageController())->index();
+    break;
+
+  case 'penelitian-page/read':
+    (new ResearchPageController())->getContents();
+    break;
+
+  case 'penelitian-page/update':
+    (new ResearchPageController())->update();
+    break;
 
   default:
     echo "404 - Halaman tidak ditemukan";

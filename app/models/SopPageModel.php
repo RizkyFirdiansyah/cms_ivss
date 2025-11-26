@@ -8,7 +8,42 @@ class SopPageModel extends BasePageModel
     parent::__construct('sop', 'Standard Operating Procedure');
   }
 
-  // Tetap pertahankan method khusus SOP
+  // Get all SOP contents including header and SOP items
+  public function getSopContents()
+  {
+    return $this->getPageContents();
+  }
+
+  // Save multiple SOP contents
+  public function saveMultipleSopContents($contents, $userId)
+  {
+    return $this->saveMultipleContents($contents, $userId);
+  }
+
+  // Get SOP content by key
+  public function getSopContent($key)
+  {
+    try {
+      $pageId = $this->getPageId();
+      if (!$pageId) return null;
+
+      $query = "SELECT content_value FROM page_contents 
+                WHERE page_id = :page_id AND content_key = :content_key";
+
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
+      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
+      $stmt->execute();
+
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+      return $result ? $result['content_value'] : null;
+    } catch (PDOException $e) {
+      error_log("DB Error (getSopContent): " . $e->getMessage());
+      return null;
+    }
+  }
+
+  // Get SOP header data
   public function getSopHeader()
   {
     try {
@@ -16,54 +51,17 @@ class SopPageModel extends BasePageModel
 
       return [
         'title' => $contents['sop_header_title']['value'] ?? 'Standard Operating Procedure',
-        'subtitle' => $contents['sop_header_subtitle']['value'] ?? '',
+        'subtitle' => $contents['sop_header_subtitle']['value'] ?? 'Prosedur operasional standar laboratorium',
         'image_path' => $contents['sop_header_image']['value'] ?? ''
       ];
     } catch (PDOException $e) {
       error_log("DB Error (getSopHeader): " . $e->getMessage());
       return [
         'title' => 'Standard Operating Procedure',
-        'subtitle' => '',
+        'subtitle' => 'Prosedur operasional standar laboratorium',
         'image_path' => ''
       ];
     }
-  }
-
-  public function getSopMainContent()
-  {
-    try {
-      $contents = $this->getPageContents();
-
-      return [
-        'title' => $contents['sop_main_title']['value'] ?? '',
-        'content' => $contents['sop_main_content']['value'] ?? '',
-        'image_path' => $contents['sop_main_image']['value'] ?? ''
-      ];
-    } catch (PDOException $e) {
-      error_log("DB Error (getSopMainContent): " . $e->getMessage());
-      return [
-        'title' => '',
-        'content' => '',
-        'image_path' => ''
-      ];
-    }
-  }
-
-  public function saveAllSopContents($headerData, $mainData, $userId)
-  {
-    $contents = [
-      // Header section
-      'sop_header_title' => ['type' => 'text', 'value' => $headerData['title'] ?? ''],
-      'sop_header_subtitle' => ['type' => 'text', 'value' => $headerData['subtitle'] ?? ''],
-      'sop_header_image' => ['type' => 'image', 'value' => $headerData['image_path'] ?? ''],
-
-      // Main content section
-      'sop_main_title' => ['type' => 'text', 'value' => $mainData['title'] ?? ''],
-      'sop_main_content' => ['type' => 'text', 'value' => $mainData['content'] ?? ''],
-      'sop_main_image' => ['type' => 'image', 'value' => $mainData['image_path'] ?? '']
-    ];
-
-    return $this->saveMultipleContents($contents, $userId);
   }
 
   // Implement abstract method dari BasePageModel
@@ -74,7 +72,6 @@ class SopPageModel extends BasePageModel
 
   public function saveHeader($headerData, $userId)
   {
-    // Untuk kompatibilitas dengan base controller sederhana
     $contents = [
       'sop_header_title' => ['type' => 'text', 'value' => $headerData['title'] ?? ''],
       'sop_header_subtitle' => ['type' => 'text', 'value' => $headerData['subtitle'] ?? ''],
