@@ -38,7 +38,7 @@ $role = $_SESSION['role'] ?? 'guest';
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Research</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/kategori"><i class="ni ni-tag"></i> Kategori</a></li>
@@ -68,25 +68,25 @@ $role = $_SESSION['role'] ?? 'guest';
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita-page"><i class="ni ni-notification-70"></i> Halaman Berita</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi-page"><i class="ni ni-books"></i> Halaman Publikasi</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian-page"><i class="ni ni-zoom-split-in"></i> Halaman Penelitian</a>
+              <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/contact-page"><i class="ni ni-email-83"></i> Halaman Contact</a>
               </li>
             </ul>
           </div>
         </li>
-
-
 
       <?php elseif ($role === 'dosen'): ?>
         <!-- MENU KHUSUS DOSEN -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Mahasiswa Bimbingan</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
 
       <?php elseif ($role === 'mahasiswa'): ?>
         <!-- MENU KHUSUS MAHASISWA -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi Saya</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Bimbingan</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
       <?php endif; ?>
 
