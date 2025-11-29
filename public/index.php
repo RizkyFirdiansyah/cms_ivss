@@ -23,6 +23,7 @@ require_once '../app/controllers/GalleryPageController.php';
 require_once '../app/controllers/NewsPageController.php';
 require_once '../app/controllers/PublicationPageController.php';
 require_once '../app/controllers/ResearchPageController.php';
+require_once '../app/controllers/ContactPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -195,7 +196,7 @@ switch ($url) {
 
   case 'publikasi/delete':
     (new PublicationsController())->delete();
-    break;  
+    break;
 
   case 'settings':
     (new SettingsPageController())->index();
@@ -330,6 +331,18 @@ switch ($url) {
 
   case 'penelitian-page/update':
     (new ResearchPageController())->update();
+    break;
+
+  case 'contact-page':
+    (new ContactPageController())->index();
+    break;
+
+  case 'contact-page/read':
+    (new ContactPageController())->getContents();
+    break;
+
+  case 'contact-page/update':
+    (new ContactPageController())->update();
     break;
 
   default:
