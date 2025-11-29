@@ -3,7 +3,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Handle preflight request
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -12,90 +12,157 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 try {
-  // Include model - path sudah terbukti benar dari test
+  // Include models
+  require_once __DIR__ . '/../models/FacilityPageModel.php';
   require_once __DIR__ . '/../models/FacilitiesModel.php';
 
-  // Inisialisasi model
-  $facilityModel = new FacilitiesModel();
+  // Inisialisasi models
+  $facilityPageModel = new FacilityPageModel();
+  $facilitiesModel = new FacilitiesModel();
 
-  // Hanya handle GET request
-  if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode([
-      'status' => 'error',
-      'message' => 'Method not allowed. Only GET requests are accepted.'
-    ]);
-    exit();
-  }
+  // Get request method
+  $method = $_SERVER['REQUEST_METHOD'];
 
   // Get query parameters
   $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+  $action = isset($_GET['action']) ? $_GET['action'] : '';
   $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : null;
   $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
   $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-  $response = [];
+  switch ($method) {
+    case 'GET':
+      handleGetRequest($facilityPageModel, $facilitiesModel, $action, $id, $limit, $offset, $search);
+      break;
 
-  // Get specific facility by ID
-  if ($id) {
-    $facility = $facilityModel->getById($id);
-
-    if ($facility) {
-      http_response_code(200);
-      $response = [
-        'status' => 'success',
-        'data' => $facility,
-        'message' => 'Facility retrieved successfully'
-      ];
-    } else {
-      http_response_code(404);
-      $response = [
+    default:
+      http_response_code(405);
+      echo json_encode([
         'status' => 'error',
-        'message' => 'Facility not found'
-      ];
-    }
+        'message' => 'Method not allowed'
+      ]);
   }
-  // Get paginated facilities
-  elseif ($limit !== null) {
-    $facilities = $facilityModel->getFacility($limit, $offset, $search);
-    $total = $facilityModel->countFacility($search);
-
-    http_response_code(200);
-    $response = [
-      'status' => 'success',
-      'data' => $facilities,
-      'pagination' => [
-        'total' => $total,
-        'limit' => $limit,
-        'offset' => $offset,
-        'has_more' => ($offset + $limit) < $total
-      ],
-      'message' => 'Facilities retrieved successfully'
-    ];
-  }
-  // Get all facilities (default)
-  else {
-    $facilities = $facilityModel->getAll();
-
-    http_response_code(200);
-    $response = [
-      'status' => 'success',
-      'data' => $facilities,
-      'total' => count($facilities),
-      'message' => 'All facilities retrieved successfully'
-    ];
-  }
-
-  // Send JSON response
-  echo json_encode($response, JSON_PRETTY_PRINT);
 } catch (Exception $e) {
-  // Log error untuk debugging
   error_log("API Error: " . $e->getMessage());
-
   http_response_code(500);
   echo json_encode([
     'status' => 'error',
     'message' => 'Internal server error',
     'error' => $e->getMessage() // Hanya untuk development
   ]);
+}
+
+function handleGetRequest($facilityPageModel, $facilitiesModel, $action, $id, $limit, $offset, $search)
+{
+  switch ($action) {
+    case 'header':
+      // Get header content untuk halaman fasilitas
+      $header = $facilityPageModel->getHeader();
+      http_response_code(200);
+      echo json_encode([
+        'status' => 'success',
+        'data' => $header,
+        'message' => 'Facility header retrieved successfully'
+      ]);
+      break;
+
+    case 'page-content':
+      // Get semua konten halaman fasilitas
+      $pageContents = $facilityPageModel->getPageContents();
+      http_response_code(200);
+      echo json_encode([
+        'status' => 'success',
+        'data' => $pageContents,
+        'message' => 'Facility page contents retrieved successfully'
+      ]);
+      break;
+
+    case 'all':
+      // Get header + semua fasilitas
+      $header = $facilityPageModel->getHeader();
+      $facilities = $facilitiesModel->getAll();
+
+      http_response_code(200);
+      echo json_encode([
+        'status' => 'success',
+        'data' => [
+          'header' => $header,
+          'facilities' => $facilities
+        ],
+        'total_facilities' => count($facilities),
+        'message' => 'Complete facility page data retrieved successfully'
+      ]);
+      break;
+
+    case 'paginated':
+      // Get header + fasilitas dengan pagination
+      $header = $facilityPageModel->getHeader();
+      $facilities = $facilitiesModel->getFacility($limit, $offset, $search);
+      $total = $facilitiesModel->countFacility($search);
+
+      http_response_code(200);
+      echo json_encode([
+        'status' => 'success',
+        'data' => [
+          'header' => $header,
+          'facilities' => $facilities
+        ],
+        'pagination' => [
+          'total' => $total,
+          'limit' => $limit,
+          'offset' => $offset,
+          'has_more' => ($offset + $limit) < $total
+        ],
+        'message' => 'Paginated facility data retrieved successfully'
+      ]);
+      break;
+
+    default:
+      // Default: handle individual facility atau semua facilities
+      if ($id) {
+        // Get specific facility by ID
+        $facility = $facilitiesModel->getById($id);
+        if ($facility) {
+          http_response_code(200);
+          echo json_encode([
+            'status' => 'success',
+            'data' => $facility,
+            'message' => 'Facility retrieved successfully'
+          ]);
+        } else {
+          http_response_code(404);
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Facility not found'
+          ]);
+        }
+      } elseif ($limit !== null) {
+        // Get paginated facilities
+        $facilities = $facilitiesModel->getFacility($limit, $offset, $search);
+        $total = $facilitiesModel->countFacility($search);
+
+        http_response_code(200);
+        echo json_encode([
+          'status' => 'success',
+          'data' => $facilities,
+          'pagination' => [
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'has_more' => ($offset + $limit) < $total
+          ],
+          'message' => 'Facilities retrieved successfully'
+        ]);
+      } else {
+        // Get all facilities
+        $facilities = $facilitiesModel->getAll();
+        http_response_code(200);
+        echo json_encode([
+          'status' => 'success',
+          'data' => $facilities,
+          'total' => count($facilities),
+          'message' => 'All facilities retrieved successfully'
+        ]);
+      }
+  }
 }
