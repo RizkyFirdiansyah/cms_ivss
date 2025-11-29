@@ -13,6 +13,7 @@ require_once '../app/controllers/NewsController.php';
 require_once '../app/controllers/CategoryController.php';
 require_once '../app/controllers/GalleryController.php';
 require_once '../app/controllers/PublicationsController.php';
+require_once '../app/controllers/FeedbackController.php';
 require_once '../app/controllers/SettingsPageController.php';
 require_once '../app/controllers/HomePageController.php';
 require_once '../app/controllers/AboutPageController.php';
@@ -196,6 +197,22 @@ switch ($url) {
 
   case 'publikasi/delete':
     (new PublicationsController())->delete();
+    break;
+
+  case 'feedback':
+    (new FeedbackController())->index();
+    break;
+
+  case 'feedback/list':
+    (new FeedbackController())->getList();
+    break;
+
+  case 'feedback/detail':
+    (new FeedbackController())->detail();
+    break;
+
+  case 'feedback/delete':
+    (new FeedbackController())->delete();
     break;
 
   case 'settings':
