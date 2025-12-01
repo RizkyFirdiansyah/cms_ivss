@@ -24,6 +24,7 @@ require_once '../app/controllers/GalleryPageController.php';
 require_once '../app/controllers/NewsPageController.php';
 require_once '../app/controllers/PublicationPageController.php';
 require_once '../app/controllers/ResearchPageController.php';
+require_once '../app/controllers/DatasetsController.php';
 require_once '../app/controllers/ContactPageController.php';
 require_once '../app/models/UserModel.php';
 
@@ -350,6 +351,24 @@ switch ($url) {
     (new ResearchPageController())->update();
     break;
 
+  case 'datasets':
+    (new DatasetsController())->index();
+    break;
+
+  case 'datasets/list':
+    (new DatasetsController())->getList();
+    break;
+
+  case 'datasets/create':
+    (new DatasetsController())->create();
+    break;
+
+  case 'datasets/delete':
+    (new DatasetsController())->delete();
+    break;
+  
+  case 'datasets/update':
+    (new DatasetsController())->update();
   case 'contact-page':
     (new ContactPageController())->index();
     break;

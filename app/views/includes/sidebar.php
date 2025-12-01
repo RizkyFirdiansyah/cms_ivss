@@ -38,8 +38,8 @@ $role = $_SESSION['role'] ?? 'guest';
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/fasilitas"><i class="ni ni-archive-2"></i> Inventori / Fasilitas</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Research</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/datasets"><i class="ni ni-folder-17"></i> Dataset</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/kategori"><i class="ni ni-tag"></i> Kategori</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/feedback"><i class="ni ni-chat-round"></i> Feedback</a></li>
@@ -80,15 +80,23 @@ $role = $_SESSION['role'] ?? 'guest';
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Mahasiswa Bimbingan</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
+<<<<<<< HEAD
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/datasets"><i class="ni ni-folder-17"></i> Dataset</a></li>
+=======
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+>>>>>>> ebe2608276505b24d5eff6d2ff8c5d447c0a7bd3
 
       <?php elseif ($role === 'mahasiswa'): ?>
         <!-- MENU KHUSUS MAHASISWA -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Bimbingan</a></li>
+<<<<<<< HEAD
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/datasets"><i class="ni ni-folder-17"></i> Dataset</a></li>
+=======
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dataset"><i class="ni ni-folder-17"></i> Dataset</a></li>
+>>>>>>> ebe2608276505b24d5eff6d2ff8c5d447c0a7bd3
       <?php endif; ?>
 
       <!-- MENU AKUN -->
