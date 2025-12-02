@@ -13,6 +13,7 @@ require_once '../app/controllers/NewsController.php';
 require_once '../app/controllers/CategoryController.php';
 require_once '../app/controllers/GalleryController.php';
 require_once '../app/controllers/PublicationsController.php';
+require_once '../app/controllers/FeedbackController.php';
 require_once '../app/controllers/SettingsPageController.php';
 require_once '../app/controllers/HomePageController.php';
 require_once '../app/controllers/AboutPageController.php';
@@ -24,6 +25,8 @@ require_once '../app/controllers/NewsPageController.php';
 require_once '../app/controllers/PublicationPageController.php';
 require_once '../app/controllers/ResearchPageController.php';
 require_once '../app/controllers/ResearchController.php';
+require_once '../app/controllers/DatasetsController.php';
+require_once '../app/controllers/ContactPageController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -196,7 +199,23 @@ switch ($url) {
 
   case 'publikasi/delete':
     (new PublicationsController())->delete();
-    break;  
+    break;
+
+  case 'feedback':
+    (new FeedbackController())->index();
+    break;
+
+  case 'feedback/list':
+    (new FeedbackController())->getList();
+    break;
+
+  case 'feedback/detail':
+    (new FeedbackController())->detail();
+    break;
+
+  case 'feedback/delete':
+    (new FeedbackController())->delete();
+    break;
 
   case 'settings':
     (new SettingsPageController())->index();
@@ -363,6 +382,34 @@ switch ($url) {
 
   case 'penelitian/detail':
     (new ResearchController())->getDetail();
+  case 'datasets':
+    (new DatasetsController())->index();
+    break;
+
+  case 'datasets/list':
+    (new DatasetsController())->getList();
+    break;
+
+  case 'datasets/create':
+    (new DatasetsController())->create();
+    break;
+
+  case 'datasets/delete':
+    (new DatasetsController())->delete();
+    break;
+  
+  case 'datasets/update':
+    (new DatasetsController())->update();
+  case 'contact-page':
+    (new ContactPageController())->index();
+    break;
+
+  case 'contact-page/read':
+    (new ContactPageController())->getContents();
+    break;
+
+  case 'contact-page/update':
+    (new ContactPageController())->update();
     break;
 
   default:
