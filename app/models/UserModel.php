@@ -144,4 +144,31 @@ class UserModel
       return false;
     }
   }
+  // Get all active users for participants dropdown
+public function getAllActiveUsers()
+{
+  try {
+    $query = "SELECT id, name, email FROM users WHERE is_active = 'aktif' ORDER BY name";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  } catch (PDOException $e) {
+    error_log("DB Error (getAllActiveUsers): " . $e->getMessage());
+    return [];
+  }
+}
+
+// Get user by ID
+public function getById($id)
+{
+  try {
+    $query = "SELECT * FROM users WHERE id = :id AND is_active = 'aktif'";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([":id" => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+  } catch (PDOException $e) {
+    error_log("DB Error (getUserById): " . $e->getMessage());
+    return null;
+  }
+}
 }

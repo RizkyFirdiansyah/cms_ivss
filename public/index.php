@@ -23,6 +23,7 @@ require_once '../app/controllers/GalleryPageController.php';
 require_once '../app/controllers/NewsPageController.php';
 require_once '../app/controllers/PublicationPageController.php';
 require_once '../app/controllers/ResearchPageController.php';
+require_once '../app/controllers/ResearchController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -330,6 +331,38 @@ switch ($url) {
 
   case 'penelitian-page/update':
     (new ResearchPageController())->update();
+    break;
+
+  case 'penelitian':
+    (new ResearchController())->index();
+    break;
+
+  case 'penelitian/list':
+    (new ResearchController())->getList();
+    break;
+
+  case 'penelitian/categories':
+    (new ResearchController())->getCategories();
+    break;
+
+  case 'penelitian/users':
+    (new ResearchController())->getUsers();
+    break;
+
+  case 'penelitian/create':
+    (new ResearchController())->create();
+    break;
+
+  case 'penelitian/update':
+    (new ResearchController())->update();
+    break;
+
+  case 'penelitian/delete':
+    (new ResearchController())->delete();
+    break;
+
+  case 'penelitian/detail':
+    (new ResearchController())->getDetail();
     break;
 
   default:
