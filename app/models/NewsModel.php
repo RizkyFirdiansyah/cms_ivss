@@ -343,6 +343,17 @@ class NewsModel
   }
 
   // Helper function
+  // refresh materialized view
+  public function refreshMaterializedViews()
+  {
+    try {
+      $this->conn->exec("REFRESH MATERIALIZED VIEW mv_news;");
+      return true;
+    } catch (PDOException $e) {
+      error_log("DB Error (refreshMaterializedViews): " . $e->getMessage());
+      return false;
+    }
+  }
   // Process category data
   private function processCategoryData($row)
   {
@@ -363,5 +374,180 @@ class NewsModel
     }
 
     return $row;
+  }
+
+  // Get news for API with filters
+  public function getNewsForApi($limit = 10, $offset = 0, $search = '', $categoryId = null, $year = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) 
+                          OR LOWER(content) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "EXTRACT(YEAR FROM created_at) = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "category_id = :category_id";
+      $params[':category_id'] = $categoryId;
+    }
+
+    // Build WHERE
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "
+            SELECT *, 
+            TO_CHAR(created_at, 'YYYY-MM-DD') as formatted_date,
+            EXTRACT(YEAR FROM created_at) as year,
+            EXTRACT(MONTH FROM created_at) as month,
+            EXTRACT(DAY FROM created_at) as day
+            FROM mv_news
+            $whereSql
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+
+    $stmt->bindValue(":limit", (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(":offset", (int)$offset, PDO::PARAM_INT);
+
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Format date for each result if needed
+    foreach ($results as &$result) {
+      if (isset($result['created_at'])) {
+        $date = new DateTime($result['created_at']);
+        $result['created_at_formatted'] = $date->format('Y-m-d');
+        $result['created_at_readable'] = $date->format('d F Y');
+        $result['created_at_time'] = $date->format('H:i');
+      }
+    }
+
+    return $results;
+  }
+
+  // get recent news for API
+  public function getRecentNewsForApi($limit = 5)
+  {
+    $sql = "SELECT *, 
+            TO_CHAR(created_at, 'YYYY-MM-DD') as formatted_date,
+            EXTRACT(YEAR FROM created_at) as year,
+            EXTRACT(MONTH FROM created_at) as month,
+            EXTRACT(DAY FROM created_at) as day
+            FROM mv_news
+            ORDER BY created_at DESC
+            LIMIT :limit";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindValue(":limit", (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  // Count news for pagination
+  public function countNewsForApi($search = '', $categoryId = null, $year = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) 
+                          OR LOWER(content) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "EXTRACT(YEAR FROM created_at) = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "category_id = :category_id";
+      $params[':category_id'] = $categoryId;
+    }
+
+    // Build WHERE
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM mv_news $whereSql";
+    $stmt = $this->conn->prepare($sql);
+
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return (int)$result['total'];
+  }
+
+  // Get available years for filtering
+  public function getAvailableYears()
+  {
+    $sql = "
+            SELECT DISTINCT EXTRACT(YEAR FROM created_at) as year 
+            FROM mv_news 
+            ORDER BY year DESC
+        ";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return array_map('intval', $years);
+  }
+
+  // Get news by ID for API
+  public function getNewsByIdForApi($id)
+  {
+    $sql = "
+            SELECT *, 
+                  TO_CHAR(created_at, 'YYYY-MM-DD') as formatted_date,
+                  TO_CHAR(created_at, 'DD Month YYYY') as readable_date,
+                  EXTRACT(YEAR FROM created_at) as year,
+                  EXTRACT(MONTH FROM created_at) as month,
+                  EXTRACT(DAY FROM created_at) as day
+            FROM mv_news 
+            WHERE id = :id 
+            LIMIT 1
+        ";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result) {
+      // Format additional date fields
+      if (isset($result['created_at'])) {
+        $date = new DateTime($result['created_at']);
+        $result['created_at_iso'] = $date->format('Y-m-d\TH:i:sP');
+        $result['created_at_timestamp'] = $date->getTimestamp();
+
+        // Month name in English
+        $result['month_name'] = $date->format('F');
+        $result['day_name'] = $date->format('l');
+      }
+    }
+
+    return $result ?: null;
   }
 }

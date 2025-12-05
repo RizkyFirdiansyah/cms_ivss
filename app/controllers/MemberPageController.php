@@ -2,18 +2,15 @@
 require_once '../app/controllers/BasePageController.php';
 require_once '../app/models/MemberPageModel.php';
 require_once '../app/models/UserModel.php';
-require_once '../app/models/ProfileModel.php';
 
 class MemberPageController extends BasePageController
 {
   private $users;
-  private $profile;
 
   public function __construct()
   {
     parent::__construct(new MemberPageModel(), 'uploads/member/');
     $this->users = new UserModel();
-    $this->profile = new ProfileModel();
   }
 
   public function index()
@@ -29,25 +26,44 @@ class MemberPageController extends BasePageController
   {
     try {
       // Ambil semua users dari model
-      $users = $this->users->getAllUsers();
-
-      // Filter hanya users yang aktif (is_active = 'aktif')
-      $activeMembers = array_filter($users, function ($user) {
-        return isset($user['is_active']) && $user['is_active'] === 'aktif';
-      });
-
-      // Reset array keys
-      $activeMembers = array_values($activeMembers);
-
+      $users = $this->users->getAllUsersWithSosmed();
       $this->jsonResponse([
         'success' => true,
-        'data' => $activeMembers
+        'data' => $users
       ]);
     } catch (Exception $e) {
       error_log("Get Active Members Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
         'message' => 'Gagal mengambil data member.'
+      ], 500);
+    }
+  }
+
+  // Get member page contents
+  public function getContents()
+  {
+    try {
+      $contents = $this->pageModel->getMemberContents();
+
+      // Structure data sesuai dengan kebutuhan views
+      $structuredData = [
+        'header' => [
+          'title' => $contents['member_header_title']['value'] ?? 'Anggota Laboratorium',
+          'subtitle' => $contents['member_header_subtitle']['value'] ?? 'Tim peneliti dan staff laboratorium',
+          'image_path' => $contents['member_header_image']['value'] ?? ''
+        ]
+      ];
+
+      $this->jsonResponse([
+        'success' => true,
+        'data' => $structuredData
+      ]);
+    } catch (Exception $e) {
+      error_log("Get Member Page Contents Error: " . $e->getMessage());
+      $this->jsonResponse([
+        'success' => false,
+        'message' => 'Gagal mengambil data konten halaman member.'
       ], 500);
     }
   }
@@ -65,22 +81,36 @@ class MemberPageController extends BasePageController
     }
 
     try {
-      // Handle file uploads first
       $uploadResult = $this->handleFileUploads();
       $uploadedFiles = $uploadResult['uploadedFiles'];
       $filesToDelete = $uploadResult['filesToDelete'];
 
-      // Dapatkan data saat ini untuk mempertahankan gambar yang tidak diubah
-      $currentHeader = $this->pageModel->getMemberHeader();
+      // Prepare content data
+      $contentData = [];
 
-      // Prepare header data
-      $headerData = [
-        'title' => trim($_POST['member_header_title'] ?? ''),
-        'subtitle' => trim($_POST['member_header_subtitle'] ?? ''),
-        'image_path' => $uploadedFiles['member_header_image'] ?? ($_POST['old_member_header_image'] ?? $currentHeader['image_path'] ?? '')
-      ];
+      // Header Section
+      $this->addContentIfSet($contentData, 'member_header_title', $_POST['member_header_title'] ?? '');
+      $this->addContentIfSet($contentData, 'member_header_subtitle', $_POST['member_header_subtitle'] ?? '');
 
-      $success = $this->pageModel->saveMemberHeader($headerData, $user['id']);
+      // Add uploaded files to content data
+      foreach ($uploadedFiles as $key => $filename) {
+        if ($filename !== false) {
+          $contentData[$key] = [
+            'type' => 'image',
+            'value' => $filename
+          ];
+        }
+      }
+
+      // Tambahkan existing images jika tidak ada upload baru
+      if (!isset($contentData['member_header_image']) && isset($_POST['old_member_header_image'])) {
+        $contentData['member_header_image'] = [
+          'type' => 'image',
+          'value' => trim($_POST['old_member_header_image'])
+        ];
+      }
+
+      $success = $this->pageModel->saveMultipleMemberContents($contentData, $user['id']);
 
       if ($success) {
         // Hapus file lama hanya setelah sukses save ke database
@@ -96,7 +126,7 @@ class MemberPageController extends BasePageController
 
         $this->jsonResponse([
           'success' => false,
-          'message' => 'Gagal memperbarui konten member.'
+          'message' => 'Gagal memperbarui konten halaman member.'
         ], 500);
       }
     } catch (Exception $e) {
@@ -105,7 +135,7 @@ class MemberPageController extends BasePageController
         $this->rollbackUploadedFiles($uploadResult['uploadedFiles']);
       }
 
-      error_log("Update Member Error: " . $e->getMessage());
+      error_log("Update Member Page Error: " . $e->getMessage());
       $this->jsonResponse([
         'success' => false,
         'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
@@ -113,25 +143,43 @@ class MemberPageController extends BasePageController
     }
   }
 
-  // Handle file uploads
+  // Helper method to add content if set
+  private function addContentIfSet(&$contentData, $key, $value)
+  {
+    if (isset($value)) {
+      $contentData[$key] = [
+        'type' => $this->getContentType($key),
+        'value' => trim($value)
+      ];
+    }
+  }
+
+  // Determine content type based on key
+  private function getContentType($key)
+  {
+    // Check if key contains 'image' for image type
+    if (strpos($key, 'image') !== false) {
+      return 'image';
+    }
+    return 'text';
+  }
+
+  // Handle file uploads dengan management file lama yang aman
   protected function handleFileUploads()
   {
     $uploadedFiles = [];
     $filesToDelete = [];
 
-    // Get current member header
-    $currentHeader = $this->pageModel->getMemberHeader();
-
-    // Header background image
+    // Member header image
     if (!empty($_FILES['member_header_image']['name'])) {
       $headerImage = $this->handleFileUpload($_FILES['member_header_image'], 'member_header');
       if ($headerImage !== false) {
         $uploadedFiles['member_header_image'] = $headerImage;
 
         // Simpan info file lama untuk dihapus nanti setelah sukses save
-        $oldImage = $_POST['old_member_header_image'] ?? ($currentHeader['image_path'] ?? '');
-        if (!empty($oldImage) && $oldImage !== $headerImage) {
-          $filesToDelete[] = $oldImage;
+        $oldHeaderImage = $this->pageModel->getMemberContent('member_header_image');
+        if ($oldHeaderImage && $oldHeaderImage !== $headerImage) {
+          $filesToDelete[] = $oldHeaderImage;
         }
       }
     }
@@ -140,5 +188,23 @@ class MemberPageController extends BasePageController
       'uploadedFiles' => $uploadedFiles,
       'filesToDelete' => $filesToDelete
     ];
+  }
+
+  // Get member content by key
+  public function getContent($key)
+  {
+    try {
+      $content = $this->pageModel->getMemberContent($key);
+      $this->jsonResponse([
+        'success' => true,
+        'data' => $content
+      ]);
+    } catch (Exception $e) {
+      error_log("Get Member Content Error: " . $e->getMessage());
+      $this->jsonResponse([
+        'success' => false,
+        'message' => 'Gagal mengambil konten member.'
+      ], 500);
+    }
   }
 }

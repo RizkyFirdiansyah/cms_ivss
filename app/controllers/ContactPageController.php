@@ -6,7 +6,7 @@ class ContactPageController extends BasePageController
 {
   public function __construct()
   {
-    parent::__construct(new ContactPageModel(), 'uploads/Contact/');
+    parent::__construct(new ContactPageModel(), 'uploads/contact/');
   }
 
   public function index()

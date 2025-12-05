@@ -20,29 +20,6 @@ class PublicationPageModel extends BasePageModel
     return $this->saveMultipleContents($contents, $userId);
   }
 
-  // Get publication page content by key
-  public function getPublicationPageContent($key)
-  {
-    try {
-      $pageId = $this->getPageId();
-      if (!$pageId) return null;
-
-      $query = "SELECT content_value FROM page_contents 
-                WHERE page_id = :page_id AND content_key = :content_key";
-
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['content_value'] : null;
-    } catch (PDOException $e) {
-      error_log("DB Error (getPublicationPageContent): " . $e->getMessage());
-      return null;
-    }
-  }
-
   // Get publication page header data
   public function getPublicationPageHeader()
   {

@@ -30,6 +30,11 @@ class SopPageController extends BasePageController
           'subtitle' => $contents['sop_header_subtitle']['value'] ?? 'Prosedur operasional standar laboratorium',
           'image_path' => $contents['sop_header_image']['value'] ?? ''
         ],
+        'layanan' => [
+          'location' => $contents['sop_layanan_location']['value'] ?? '',
+          'email' => $contents['sop_layanan_email']['value'] ?? '',
+          'hours' => $contents['sop_layanan_hours']['value'] ?? ''
+        ],
         'sop_items' => []
       ];
 
@@ -79,6 +84,11 @@ class SopPageController extends BasePageController
       // Header Section
       $this->addContentIfSet($contentData, 'sop_header_title', $_POST['sop_header_title'] ?? '');
       $this->addContentIfSet($contentData, 'sop_header_subtitle', $_POST['sop_header_subtitle'] ?? '');
+
+      // Layanan Section
+      $this->addContentIfSet($contentData, 'sop_layanan_location', $_POST['sop_layanan_location'] ?? '');
+      $this->addContentIfSet($contentData, 'sop_layanan_email', $_POST['sop_layanan_email'] ?? '');
+      $this->addContentIfSet($contentData, 'sop_layanan_hours', $_POST['sop_layanan_hours'] ?? '');
 
       // SOP Items - 3 items
       for ($i = 1; $i <= 3; $i++) {

@@ -69,22 +69,22 @@ class FeedbackModel
   }
 
   // Insert New Feedback
-  // public function insertFeedback($data)
-  // {
-  //   $query = "INSERT INTO feedbacks (name, email, content)
-  //             VALUES (:name, :email, :content)";
+  public function insertFeedback($data)
+  {
+    $query = "INSERT INTO feedbacks (name, email, content) 
+              VALUES (:name, :email, :content)";
 
-  //   try {
-  //     $stmt = $this->conn->prepare($query);
-  //     $stmt->bindValue(':name', $data['name']);
-  //     $stmt->bindValue(':email', $data['email']);
-  //     $stmt->bindValue(':content', $data['content']);
-  //     return $stmt->execute();
-  //   } catch (PDOException $e) {
-  //     error_log("DB Error (insertFeedback): " . $e->getMessage());
-  //     return false;
-  //   }
-  // }
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':name', $data['name'] ?? '', PDO::PARAM_STR);
+      $stmt->bindValue(':email', $data['email'] ?? '', PDO::PARAM_STR);
+      $stmt->bindValue(':content', $data['content'] ?? '', PDO::PARAM_STR);
+      return $stmt->execute();
+    } catch (PDOException $e) {
+      error_log("DB Error (insertFeedback): " . $e->getMessage());
+      return false;
+    }
+  }
 
   // Delete Feedback
   public function deleteFeedback($id)
