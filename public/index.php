@@ -24,6 +24,7 @@ require_once '../app/controllers/GalleryPageController.php';
 require_once '../app/controllers/NewsPageController.php';
 require_once '../app/controllers/PublicationPageController.php';
 require_once '../app/controllers/ResearchPageController.php';
+require_once '../app/controllers/ResearchController.php';
 require_once '../app/controllers/DatasetsController.php';
 require_once '../app/controllers/ContactPageController.php';
 require_once '../app/models/UserModel.php';
@@ -351,6 +352,36 @@ switch ($url) {
     (new ResearchPageController())->update();
     break;
 
+  case 'penelitian':
+    (new ResearchController())->index();
+    break;
+
+  case 'penelitian/list':
+    (new ResearchController())->getList();
+    break;
+
+  case 'penelitian/categories':
+    (new ResearchController())->getCategories();
+    break;
+
+  case 'penelitian/users':
+    (new ResearchController())->getUsers();
+    break;
+
+  case 'penelitian/create':
+    (new ResearchController())->create();
+    break;
+
+  case 'penelitian/update':
+    (new ResearchController())->update();
+    break;
+
+  case 'penelitian/delete':
+    (new ResearchController())->delete();
+    break;
+
+  case 'penelitian/detail':
+    (new ResearchController())->getDetail();
   case 'datasets':
     (new DatasetsController())->index();
     break;
