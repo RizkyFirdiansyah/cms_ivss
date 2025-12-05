@@ -7,3 +7,4 @@ public/assets/
 # Ignore folder uploads
 public/uploads/*
 !public/uploads/.gitkeep
+

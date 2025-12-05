@@ -93,6 +93,7 @@ class PublicationsController extends BaseController
           "message" => "Publikasi berhasil ditambahkan.",
           "id" => $save
         ]);
+        $this->publication->refreshMaterializedView();
       } else {
         $this->jsonResponse([
           "success" => false,
@@ -149,6 +150,8 @@ class PublicationsController extends BaseController
         "categories" => $categoryIds
       ]);
 
+      $this->publication->refreshMaterializedView();
+
       $this->jsonResponse([
         "success" => (bool)$save,
         "message" => $save ? "Publikasi berhasil diperbarui." : "Gagal update publikasi."
@@ -176,6 +179,7 @@ class PublicationsController extends BaseController
       }
 
       $del = $this->publication->delete($id);
+      $this->publication->refreshMaterializedView();
 
       $this->jsonResponse([
         "success" => $del,

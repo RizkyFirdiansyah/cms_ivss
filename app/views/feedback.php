@@ -84,10 +84,6 @@
             <p id="detail-email" class="form-control-static"></p>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">User ID (jika login)</label>
-            <p id="detail-user-id" class="form-control-static">-</p>
-          </div>
-          <div class="mb-3">
             <label class="form-label fw-bold">Isi Feedback</label>
             <div id="detail-content" class="p-3 bg-gray-100 rounded" style="min-height: 100px;"></div>
           </div>
@@ -184,7 +180,6 @@
         method: 'GET',
         dataType: 'json',
         success: function(res) {
-          console.log(res);
           if (res.success && res.data) {
             const feedback = res.data;
             $('#detail-name').text(feedback.name || '-');
@@ -198,7 +193,6 @@
           }
         },
         error: function(xhr) {
-          console.error('Error loading feedback detail:', xhr);
           showAlert('Gagal memuat detail feedback', 'error');
         }
       });
@@ -221,7 +215,6 @@
             if (res.success) loadFeedback(currentPage, currentSearch);
           },
           error: function(xhr, status, error) {
-            console.error('Error deleting feedback:', error);
             showAlert('Terjadi kesalahan saat menghapus feedback', 'error');
           }
         });
@@ -256,11 +249,11 @@
         <span class="text-secondary text-xs">${createdTime}</span>
       </td>
       <td class="text-center align-middle">
-        <button class="btn btn-xs btn-info me-1" onclick="showDetailFeedback(${feedback.id})">
-          <i class="fa fa-eye me-1"></i> Detail
+        <button class="btn btn-xs btn-info" onclick="showDetailFeedback(${feedback.id})">
+          <i class="fa fa-eye 1"></i>
         </button>
         <button class="btn btn-xs btn-danger" onclick="deleteFeedback(${feedback.id})">
-          <i class="fa fa-trash me-1"></i> Hapus
+          <i class="fa fa-trash 1"></i>
         </button>
       </td>
     </tr>
@@ -326,7 +319,6 @@
           currentSearch = search;
         },
         error: function(xhr, status, err) {
-          console.error('Error loading feedback:', status, err);
           tbody.html(`<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>`);
         }
       });

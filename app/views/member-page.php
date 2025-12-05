@@ -292,30 +292,26 @@
                 </button>
               </h2>
               <div id="${collapseId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}" 
-                   aria-labelledby="${accordionId}" data-bs-parent="#membersAccordion">
+                  aria-labelledby="${accordionId}" data-bs-parent="#membersAccordion">
                 <div class="accordion-body p-3">
                   <div class="row">
           `;
 
               // Add members for this role
               members.forEach((member) => {
-                const roleBadge = getRoleBadge(member.role);
+                const roleBadge = getRoleBadge(member.user_role);
                 accordionHTML += `
               <div class="col-xl-4 col-lg-6 mb-3">
                 <div class="card h-100 border-0 shadow-sm">
                   <div class="card-body text-center p-3">
-                    ${member.photo ? `
-                      <img src="${BASE_URL}/uploads/profile/${member.photo}" 
-                           class="rounded-circle mb-2 border" 
-                           style="width: 80px; height: 80px; object-fit: cover;" 
-                           alt="${member.name}">
+                    ${member.user_photo ? `
+                      <img src="${BASE_URL}/uploads/profile/${member.user_photo}" class="rounded-circle mb-2 border" style="width: 80px; height: 80px; object-fit: cover;" alt="${member.user_name}">
                     ` : `
-                      <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-2 border" 
-                           style="width: 80px; height: 80px;">
+                      <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-2 border" style="width: 80px; height: 80px;">
                         <i class="fas fa-user text-muted"></i>
                       </div>
                     `}
-                    <h6 class="card-title mb-1 fw-bold text-dark">${member.name}</h6>
+                    <h6 class="card-title mb-1 fw-bold text-dark">${member.user_name}</h6>
                     <div class="mb-2">${roleBadge}</div>
                   </div>
                 </div>
@@ -378,7 +374,7 @@
       };
 
       members.forEach(member => {
-        const role = member.role?.toLowerCase() || '';
+        const role = member.user_role?.toLowerCase() || '';
 
         if (role.includes('kepala') || role.includes('head') || role.includes('leader')) {
           groups.kepala_lab.push(member);

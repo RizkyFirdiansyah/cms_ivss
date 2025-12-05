@@ -8,7 +8,42 @@ class MemberPageModel extends BasePageModel
     parent::__construct('member', 'Member');
   }
 
-  // Get member header data (title, subtitle, image)
+  // Get all member page contents
+  public function getMemberContents()
+  {
+    return $this->getPageContents();
+  }
+
+  // Save multiple member page contents
+  public function saveMultipleMemberContents($contents, $userId)
+  {
+    return $this->saveMultipleContents($contents, $userId);
+  }
+
+  // Get member page content by key
+  public function getMemberContent($key)
+  {
+    try {
+      $pageId = $this->getPageId();
+      if (!$pageId) return null;
+
+      $query = "SELECT content_value FROM page_contents 
+                WHERE page_id = :page_id AND content_key = :content_key";
+
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
+      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
+      $stmt->execute();
+
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+      return $result ? $result['content_value'] : null;
+    } catch (PDOException $e) {
+      error_log("DB Error (getMemberContent): " . $e->getMessage());
+      return null;
+    }
+  }
+
+  // Get member page header data
   public function getMemberHeader()
   {
     try {
@@ -39,29 +74,6 @@ class MemberPageModel extends BasePageModel
     ];
 
     return $this->saveMultipleContents($contents, $userId);
-  }
-
-  // Get specific content value
-  public function getMemberContent($key)
-  {
-    try {
-      $pageId = $this->getPageId();
-      if (!$pageId) return null;
-
-      $query = "SELECT content_value FROM page_contents 
-                WHERE page_id = :page_id AND content_key = :content_key";
-
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindValue(':page_id', $pageId, PDO::PARAM_INT);
-      $stmt->bindValue(':content_key', $key, PDO::PARAM_STR);
-      $stmt->execute();
-
-      $result = $stmt->fetch(PDO::FETCH_ASSOC);
-      return $result ? $result['content_value'] : null;
-    } catch (PDOException $e) {
-      error_log("DB Error (getMemberContent): " . $e->getMessage());
-      return null;
-    }
   }
 
   // Implement abstract method dari BasePageModel

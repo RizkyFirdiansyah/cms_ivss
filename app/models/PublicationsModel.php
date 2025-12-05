@@ -11,10 +11,9 @@ class PublicationsModel
     $this->conn = $db->getConnection();
   }
 
-  // Read Data Publications dengan Kategori - PERBAIKAN
+  // Read Data Publications dengan Kategori 
   public function getPublications($limit, $offset, $search = '', $category_id = null)
   {
-    // Query dasar tanpa GROUP BY untuk menghindari masalah STRING_AGG
     $query = "SELECT DISTINCT p.*, u.name as author_name
               FROM publications p
               LEFT JOIN users u ON p.user_id = u.id
@@ -79,7 +78,7 @@ class PublicationsModel
               FROM categories c
               JOIN publication_categories pc ON c.id = pc.category_id
               WHERE pc.publication_id = :publication_id";
-    
+
     try {
       $stmt = $this->conn->prepare($query);
       $stmt->execute([':publication_id' => $publication_id]);
@@ -98,7 +97,7 @@ class PublicationsModel
               FROM categories c
               JOIN publication_categories pc ON c.id = pc.category_id
               WHERE pc.publication_id = :publication_id";
-    
+
     try {
       $stmt = $this->conn->prepare($query);
       $stmt->execute([':publication_id' => $publication_id]);
@@ -109,7 +108,7 @@ class PublicationsModel
     }
   }
 
-  // Count Publications - PERBAIKAN
+  // Count Publications 
   public function countPublications($search = '', $category_id = null)
   {
     $query = "SELECT COUNT(DISTINCT p.id) AS total 
@@ -153,7 +152,7 @@ class PublicationsModel
     }
   }
 
-  // Insert/Update Publication - TETAP SAMA
+  // Insert/Update Publication 
   public function savePublication($data)
   {
     $this->conn->beginTransaction();
@@ -200,7 +199,7 @@ class PublicationsModel
     }
   }
 
-  // Save publication categories - TETAP SAMA
+  // Save publication categories 
   private function savePublicationCategories($publicationId, $categories)
   {
     // Validasi input
@@ -221,7 +220,7 @@ class PublicationsModel
     // Insert new categories hanya jika ada
     if (!empty($categories)) {
       $insertStmt = $this->conn->prepare("INSERT INTO publication_categories (publication_id, category_id) VALUES (:publication_id, :category_id)");
-      
+
       foreach ($categories as $categoryId) {
         $insertStmt->bindValue(':publication_id', $publicationId, PDO::PARAM_INT);
         $insertStmt->bindValue(':category_id', (int)$categoryId, PDO::PARAM_INT);
@@ -230,7 +229,7 @@ class PublicationsModel
     }
   }
 
-  // Get single publication by ID - PERBAIKAN
+  // Get single publication by ID 
   public function getById($id)
   {
     try {
@@ -256,26 +255,179 @@ class PublicationsModel
     }
   }
 
-  // Delete Publication - TETAP SAMA
+  // Delete Publication 
   public function delete($id)
   {
     $this->conn->beginTransaction();
-    
+
     try {
       // Delete from publication_categories first
       $stmt1 = $this->conn->prepare("DELETE FROM publication_categories WHERE publication_id = :id");
       $stmt1->execute([":id" => $id]);
-      
+
       // Then delete from publications
       $stmt2 = $this->conn->prepare("DELETE FROM publications WHERE id = :id");
       $result = $stmt2->execute([":id" => $id]);
-      
+
       $this->conn->commit();
       return $result;
     } catch (PDOException $e) {
       $this->conn->rollBack();
       error_log("DB Error (delete): " . $e->getMessage());
       return false;
+    }
+  }
+
+  // Helpers 
+  // Refresh materialized view
+  public function refreshMaterializedView()
+  {
+    try {
+      // Pastikan ada unique index untuk CONCURRENTLY refresh
+      // CREATE UNIQUE INDEX idx_mv_publications_id ON mv_publications(publication_id);
+      $this->conn->exec("REFRESH MATERIALIZED VIEW mv_publications;");
+      return true;
+    } catch (PDOException $e) {
+      error_log("DB Error (refreshMaterializedView): " . $e->getMessage());
+      return false;
+    }
+  }
+
+  // Get publications for API with filters
+  public function getPublicationsForApi($limit = 10, $offset = 0, $search = '', $year = null, $categoryId = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) OR LOWER(author_name) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "publication_year = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "categories_name::text LIKE :category_filter";
+      $params[':category_filter'] = '%"id":' . $categoryId . '%';
+    }
+
+    // Build WHERE clause
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "
+      SELECT 
+        publication_id as id,
+        title,
+        link,
+        publication_year,
+        author_name,
+        categories_name
+      FROM mv_publications
+      $whereSql
+      ORDER BY publication_year DESC, publication_id DESC
+      LIMIT :limit OFFSET :offset
+    ";
+
+    try {
+      $stmt = $this->conn->prepare($sql);
+
+      // Bind parameters
+      foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+      }
+
+      $stmt->bindValue(":limit", (int)$limit, PDO::PARAM_INT);
+      $stmt->bindValue(":offset", (int)$offset, PDO::PARAM_INT);
+
+      $stmt->execute();
+      $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      // Parse categories_name JSON
+      foreach ($results as &$result) {
+        if (isset($result['categories_name'])) {
+          $result['categories'] = json_decode($result['categories_name'], true);
+          unset($result['categories_name']);
+        } else {
+          $result['categories'] = [];
+        }
+      }
+
+      return $results;
+    } catch (PDOException $e) {
+      error_log("DB Error (getPublicationsForApi): " . $e->getMessage());
+      return [];
+    }
+  }
+
+  // Count publications for pagination
+  public function countPublicationsForApi($search = '', $year = null, $categoryId = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) OR LOWER(author_name) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "publication_year = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "categories_name::text LIKE :category_filter";
+      $params[':category_filter'] = '%"id":' . $categoryId . '%';
+    }
+
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM mv_publications $whereSql";
+
+    try {
+      $stmt = $this->conn->prepare($sql);
+
+      foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+      }
+
+      $stmt->execute();
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+      return (int)$result['total'];
+    } catch (PDOException $e) {
+      error_log("DB Error (countPublicationsForApi): " . $e->getMessage());
+      return 0;
+    }
+  }
+
+  // Get available years for filtering
+  public function getAvailableYears()
+  {
+    $sql = "
+      SELECT DISTINCT publication_year as year 
+      FROM mv_publications 
+      WHERE publication_year IS NOT NULL
+      ORDER BY publication_year DESC
+    ";
+
+    try {
+      $stmt = $this->conn->prepare($sql);
+      $stmt->execute();
+
+      $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+      return array_map('intval', $years);
+    } catch (PDOException $e) {
+      error_log("DB Error (getAvailableYears): " . $e->getMessage());
+      return [];
     }
   }
 }

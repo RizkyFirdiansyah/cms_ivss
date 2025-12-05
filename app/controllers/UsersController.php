@@ -48,6 +48,7 @@ class UsersController extends BaseController
   {
     $data = $_POST;
     $success = $this->userModel->insertUser($data);
+    $this->userModel->refreshMaterializedViews();
 
     $response_data = [
       'success' => $success,
@@ -74,6 +75,7 @@ class UsersController extends BaseController
     }
 
     $success = $this->userModel->updateUser($id, $role, $is_active, $password_hash);
+    $this->userModel->refreshMaterializedViews();
 
     $response_data = [
       'success' => $success,
@@ -88,6 +90,7 @@ class UsersController extends BaseController
   {
     $id = $_POST['id_user'];
     $success = $this->userModel->deleteUser($id);
+    $this->userModel->refreshMaterializedViews();
 
     $response_data = [
       'success' => $success,

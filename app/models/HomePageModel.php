@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/BasePageModel.php';
+require_once __DIR__ . '/../models/AboutPageModel.php';
 
 class HomePageModel extends BasePageModel
 {

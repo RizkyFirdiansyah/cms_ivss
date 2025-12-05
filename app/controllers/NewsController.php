@@ -94,76 +94,14 @@ class NewsController extends BaseController
       "categories" => $categoryIds
     ]);
 
+    $this->news->refreshMaterializedViews();
+
     $this->jsonResponse([
       "success" => (bool)$save,
       "message" => $save ? "Berita berhasil ditambahkan." : "Gagal menambah berita.",
       "id" => $save
     ]);
   }
-
-  // Get News by Category
-  // public function getByCategory()
-  // {
-  //   try {
-  //     $categoryId = $_GET['category_id'] ?? null;
-  //     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-  //     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-
-  //     // Validasi category_id
-  //     if (!$categoryId || !is_numeric($categoryId)) {
-  //       return $this->jsonResponse([
-  //         "success" => false,
-  //         "message" => "ID kategori tidak valid."
-  //       ], 400);
-  //     }
-
-  //     $categoryId = (int)$categoryId;
-
-  //     // Validasi pagination
-  //     if ($page < 1) $page = 1;
-  //     if ($limit < 1 || $limit > 50) $limit = 10; // Limit max 50 untuk prevent overload
-
-  //     $offset = ($page - 1) * $limit;
-
-  //     // Cek apakah kategori exists
-  //     $category = $this->category->getById($categoryId);
-  //     if (!$category) {
-  //       return $this->jsonResponse([
-  //         "success" => false,
-  //         "message" => "Kategori tidak ditemukan."
-  //       ], 404);
-  //     }
-
-  //     // Ambil data berita berdasarkan kategori
-  //     $news = $this->news->getNewsByCategory($categoryId, $limit, $offset);
-
-  //     // Count total berita untuk pagination (opsional - butuh method baru di model)
-  //     $totalNews = $this->news->countNewsByCategory($categoryId);
-
-  //     $this->jsonResponse([
-  //       "success" => true,
-  //       "data" => [
-  //         "category" => [
-  //           "id" => $category['id'],
-  //           "name" => $category['name']
-  //         ],
-  //         "news" => $news,
-  //         "pagination" => [
-  //           "page" => $page,
-  //           "limit" => $limit,
-  //           "total" => $totalNews,
-  //           "total_pages" => ceil($totalNews / $limit)
-  //         ]
-  //       ]
-  //     ]);
-  //   } catch (Exception $e) {
-  //     error_log("Get News By Category Exception: " . $e->getMessage());
-  //     $this->jsonResponse([
-  //       "success" => false,
-  //       "message" => "Terjadi kesalahan sistem: " . $e->getMessage()
-  //     ], 500);
-  //   }
-  // }
 
   // Update News
   public function update()
@@ -226,6 +164,8 @@ class NewsController extends BaseController
       "categories" => $categoryIds
     ]);
 
+    $this->news->refreshMaterializedViews();
+
     $this->jsonResponse([
       "success" => (bool)$save,
       "message" => $save ? "Berita berhasil diperbarui." : "Gagal update berita."
@@ -259,6 +199,8 @@ class NewsController extends BaseController
         $this->deleteFileFromServer($photo_name);
       }
     }
+
+    $this->news->refreshMaterializedViews();
 
     $this->jsonResponse([
       "success" => $del,

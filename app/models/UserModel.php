@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../config/Database.php';
 class UserModel
 {
   private $conn;
@@ -21,19 +21,6 @@ class UserModel
       return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
       echo "DB Error (getUserByEmail): " . $e->getMessage();
-    }
-  }
-
-  // Get All
-  public function getAllUsers()
-  {
-    $query = "SELECT * FROM users";
-    try {
-      $stmt = $this->conn->prepare($query);
-      $stmt->execute();
-      return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-      echo "DB Error (getAllUsers): " . $e->getMessage();
     }
   }
 
@@ -144,31 +131,46 @@ class UserModel
       return false;
     }
   }
-  // Get all active users for participants dropdown
-public function getAllActiveUsers()
-{
-  try {
-    $query = "SELECT id, name, email FROM users WHERE is_active = 'aktif' ORDER BY name";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-  } catch (PDOException $e) {
-    error_log("DB Error (getAllActiveUsers): " . $e->getMessage());
-    return [];
-  }
-}
 
-// Get user by ID
-public function getById($id)
-{
-  try {
-    $query = "SELECT * FROM users WHERE id = :id AND is_active = 'aktif'";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute([":id" => $id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-  } catch (PDOException $e) {
-    error_log("DB Error (getUserById): " . $e->getMessage());
-    return null;
+  // Helpers
+  // Refresh Materialized Views
+  public function refreshMaterializedViews()
+  {
+    try {
+      $this->conn->exec("REFRESH MATERIALIZED VIEW mv_user_social_media;");
+      return true;
+    } catch (PDOException $e) {
+      error_log("DB Error (refreshMaterializedViews): " . $e->getMessage());
+      return false;
+    }
   }
-}
+
+  // Get All users with sosmed for API
+  public function getAllUsersWithSosmed()
+  {
+    $query = "SELECT * FROM mv_user_social_media";
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getAllUsersWithSosmed): " . $e->getMessage());
+      return false;
+    }
+  }
+
+  // Get User by ID for API
+  public function getUserById($id)
+  {
+    $query = "SELECT * FROM users WHERE id = :id_user";
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':id_user', $id);
+      $stmt->execute();
+      return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getUserById): " . $e->getMessage());
+      return false;
+    }
+  }
 }
