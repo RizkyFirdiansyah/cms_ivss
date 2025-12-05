@@ -14,7 +14,6 @@ class ResearchController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
-    parent::requireRole('kepala');
 
     $this->research = new ResearchModel();
     $this->category = new CategoryModel();
@@ -31,41 +30,47 @@ class ResearchController extends BaseController
 
   // Get All Research
   // Get All Research
-  public function getList()
-  {
+// Get All Research
+public function getList()
+{
     try {
-      $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-      $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
-      $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-      $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
-      $status = isset($_GET['status']) ? trim($_GET['status']) : ''; // TAMBAHKAN INI
-
-      $offset = ($page - 1) * $limit;
-
-      // Debug log untuk melihat parameter yang diterima
-      error_log("Research List Params: search={$search}, category_id={$category_id}, status={$status}");
-
-      // PASTIKAN Anda memanggil method dengan parameter status
-      $data = $this->research->getResearch($limit, $offset, $search, $category_id, $status);
-      $total = $this->research->countResearch($search, $category_id, $status);
-
-      $response_data = [
-        'success' => true,
-        'data' => $data,
-        'total' => $total,
-      ];
-
-      $this->jsonResponse($response_data);
+        $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+        $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
+        $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+        
+        $offset = ($page - 1) * $limit;
+        
+        // Get current user data
+        $currentUser = $this->user;
+        $userId = $currentUser['id'];
+        $userRole = $currentUser['role'];
+        
+        // Debug log
+        error_log("Research List Params: user_id={$userId}, role={$userRole}, search={$search}, category_id={$category_id}, status={$status}");
+        
+        // Tambahkan parameter user_id dan user_role
+        $data = $this->research->getResearch($limit, $offset, $search, $category_id, $status, $userId, $userRole);
+        $total = $this->research->countResearch($search, $category_id, $status, $userId, $userRole);
+        
+        $response_data = [
+            'success' => true,
+            'data' => $data,
+            'total' => $total,
+        ];
+        
+        $this->jsonResponse($response_data);
     } catch (Exception $e) {
-      error_log("Research List Error: " . $e->getMessage());
-      $this->jsonResponse([
-        'success' => false,
-        'message' => 'Error: ' . $e->getMessage(),
-        'data' => [],
-        'total' => 0
-      ]);
+        error_log("Research List Error: " . $e->getMessage());
+        $this->jsonResponse([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'data' => [],
+            'total' => 0
+        ]);
     }
-  }
+}
   // Get All Categories (dropdown)
   public function getCategories()
   {

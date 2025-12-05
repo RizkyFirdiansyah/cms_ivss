@@ -13,8 +13,15 @@ class ResearchModel
 
   // Read Data Research dengan Kategori dan Participants
   // Read Data Research dengan Kategori dan Participants
-  public function getResearch($limit, $offset, $search = '', $category_id = null, $status = '')
-  {
+  // Read Data Research dengan Kategori dan Participants - DIMODIFIKASI
+  // Read Data Research dengan Kategori dan Participants - DIMODIFIKASI untuk mahasiswa
+  // Read Data Research dengan Kategori dan Participants - DIMODIFIKASI untuk mahasiswa
+  // Read Data Research dengan Kategori dan Participants - DIPERBAIKI untuk dosen
+  // Alternatif untuk dosen - PASTIKAN hanya research yang dibuat oleh dosen itu sendiri
+  // Read Data Research dengan Kategori dan Participants - VERSI FIXED
+// Read Data Research dengan Kategori dan Participants - PERBAIKAN UNTUK DOSEN
+public function getResearch($limit, $offset, $search = '', $category_id = null, $status = '', $userId = null, $userRole = null)
+{
     $query = "SELECT DISTINCT 
                 r.*, 
                 u.name as creator_name,
@@ -28,114 +35,167 @@ class ResearchModel
               LEFT JOIN categories c ON rc.category_id = c.id
               LEFT JOIN research_participants rp ON r.id = rp.research_id
               LEFT JOIN users pu ON rp.user_id = pu.id";
-
+    
     $whereConditions = [];
     $params = [];
-
+    
+    // Filter berdasarkan role user
+    if ($userRole === 'dosen') {
+        // DOSEN bisa melihat:
+        // 1. Research yang DIA BUAT SENDIRI (created_by_user_id = user_id)
+        // 2. Research dimana DIA BERPARTISIPASI (sebagai participant)
+        $whereConditions[] = "(r.created_by_user_id = :user_id 
+                              OR rp.user_id = :user_id)";
+        $params[':user_id'] = $userId;
+        
+        // Debug log
+        error_log("Dosen Filter: user_id={$userId}, melihat research yang dibuat atau diikuti");
+    } elseif ($userRole === 'mahasiswa') {
+        // MAHASISWA bisa melihat:
+        // 1. Research yang DIA BUAT SENDIRI
+        // 2. Research dimana DIA BERPARTISIPASI
+        // 3. Research yang dibuat oleh DOSEN
+        $whereConditions[] = "(r.created_by_user_id = :user_id 
+                              OR rp.user_id = :user_id 
+                              OR u.role = 'dosen')";
+        $params[':user_id'] = $userId;
+        
+        // Debug log
+        error_log("Mahasiswa Filter: user_id={$userId}, melihat research yang dibuat, diikuti, atau oleh dosen");
+    }
+    // Jika kepala lab (admin), tidak ada filter tambahan
+    
     // Filter search
     if ($search !== '') {
-      $whereConditions[] = "(r.title ILIKE :search OR r.description ILIKE :search)";
-      $params[':search'] = '%' . $search . '%';
+        $whereConditions[] = "(r.title ILIKE :search OR r.description ILIKE :search)";
+        $params[':search'] = '%' . $search . '%';
     }
-
+    
     // Filter kategori
     if ($category_id !== null && $category_id > 0) {
-      $whereConditions[] = "rc.category_id = :category_id";
-      $params[':category_id'] = $category_id;
+        $whereConditions[] = "rc.category_id = :category_id";
+        $params[':category_id'] = $category_id;
     }
-
-    // Filter status - TAMBAHKAN INI
+    
+    // Filter status
     if ($status !== '') {
-      $whereConditions[] = "r.status = :status";
-      $params[':status'] = $status;
+        $whereConditions[] = "r.status = :status";
+        $params[':status'] = $status;
     }
-
+    
     // Gabungkan kondisi WHERE
     if (!empty($whereConditions)) {
-      $query .= " WHERE " . implode(" AND ", $whereConditions);
+        $query .= " WHERE " . implode(" AND ", $whereConditions);
     }
-
+    
     $query .= " GROUP BY r.id, u.name
                 ORDER BY r.start_date DESC 
                 LIMIT :limit OFFSET :offset";
-
-    try {
-      $stmt = $this->conn->prepare($query);
-
-      // Bind parameters
-      foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value, PDO::PARAM_STR);
-      }
-
-      $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-      $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-
-      $stmt->execute();
-      $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-      // Process data untuk semua results
-      foreach ($results as &$row) {
-        $row = $this->processResearchData($row);
-      }
-
-      return $results;
-    } catch (PDOException $e) {
-      error_log("DB Error (getResearch): " . $e->getMessage());
-      return [];
+    
+    // Debug: Log query untuk dosen
+    if ($userRole === 'dosen') {
+        $debugQuery = str_replace(array_keys($params), array_values($params), $query);
+        error_log("Query untuk Dosen: " . $debugQuery);
     }
-  }
+    
+    try {
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug log hasil
+        error_log("Hasil query untuk {$userRole} (ID: {$userId}): " . count($results) . " records");
+        
+        // Process data untuk semua results
+        foreach ($results as &$row) {
+            $row = $this->processResearchData($row);
+        }
+        
+        return $results;
+    } catch (PDOException $e) {
+        error_log("DB Error (getResearch): " . $e->getMessage());
+        error_log("Query: " . $query);
+        return [];
+    }
+}
 
-  // Count Research
-  public function countResearch($search = '', $category_id = null, $status = '')
-  {
+// Count Research - PERBAIKAN UNTUK DOSEN
+public function countResearch($search = '', $category_id = null, $status = '', $userId = null, $userRole = null)
+{
     $query = "SELECT COUNT(DISTINCT r.id) AS total 
               FROM research r
+              LEFT JOIN users u ON r.created_by_user_id = u.id
               LEFT JOIN research_categories rc ON r.id = rc.research_id
-              LEFT JOIN categories c ON rc.category_id = c.id";
-
+              LEFT JOIN research_participants rp ON r.id = rp.research_id";
+    
     $whereConditions = [];
     $params = [];
-
+    
+    // Filter berdasarkan role user
+    if ($userRole === 'dosen') {
+        // DOSEN: research yang dibuat atau diikuti
+        $whereConditions[] = "(r.created_by_user_id = :user_id OR rp.user_id = :user_id)";
+        $params[':user_id'] = $userId;
+    } elseif ($userRole === 'mahasiswa') {
+        // MAHASISWA: research yang dibuat, diikuti, atau oleh dosen
+        $whereConditions[] = "(r.created_by_user_id = :user_id 
+                              OR rp.user_id = :user_id 
+                              OR u.role = 'dosen')";
+        $params[':user_id'] = $userId;
+    }
+    // Jika kepala lab (admin), tidak ada filter tambahan
+    
     // Filter search
     if ($search !== '') {
-      $whereConditions[] = "(r.title ILIKE :search OR r.description ILIKE :search)";
-      $params[':search'] = '%' . $search . '%';
+        $whereConditions[] = "(r.title ILIKE :search OR r.description ILIKE :search)";
+        $params[':search'] = '%' . $search . '%';
     }
-
+    
     // Filter kategori
     if ($category_id !== null && $category_id > 0) {
-      $whereConditions[] = "rc.category_id = :category_id";
-      $params[':category_id'] = $category_id;
+        $whereConditions[] = "rc.category_id = :category_id";
+        $params[':category_id'] = $category_id;
     }
-
-    // Filter status - TAMBAHKAN INI
+    
+    // Filter status
     if ($status !== '') {
-      $whereConditions[] = "r.status = :status";
-      $params[':status'] = $status;
+        $whereConditions[] = "r.status = :status";
+        $params[':status'] = $status;
     }
-
+    
     // Gabungkan kondisi WHERE
     if (!empty($whereConditions)) {
-      $query .= " WHERE " . implode(" AND ", $whereConditions);
+        $query .= " WHERE " . implode(" AND ", $whereConditions);
     }
-
+    
     try {
-      $stmt = $this->conn->prepare($query);
-
-      // Bind parameters
-      foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value, PDO::PARAM_STR);
-      }
-
-      $stmt->execute();
-      return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $stmt = $this->conn->prepare($query);
+        
+        // Bind parameters
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        $total = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        error_log("Count untuk {$userRole} (ID: {$userId}): {$total} records");
+        
+        return $total;
     } catch (PDOException $e) {
-      error_log("DB Error (countResearch): " . $e->getMessage());
-      return 0;
+        error_log("DB Error (countResearch): " . $e->getMessage());
+        return 0;
     }
-  }
-  // Insert/Update Research
-  // Insert/Update Research
+}
   public function saveResearch($data)
   {
     $this->conn->beginTransaction();

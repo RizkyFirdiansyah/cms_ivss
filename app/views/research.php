@@ -768,6 +768,7 @@ $page_breadcrumb = ["Pages", "Penelitian"];
           .replace(/'/g, '&#39;')
           .replace(/&/g, '&amp;');
       };
+      
 
       console.log('Penelitian id : ' + penelitian.id);
 
