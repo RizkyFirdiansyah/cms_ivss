@@ -456,4 +456,184 @@ class ResearchModel
 
     return $row;
   }
+
+  // Model untuk API Research menggunakan Materialized View
+  public function getResearchForApi($limit = 10, $offset = 0, $search = '', $categoryId = null, $year = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "EXTRACT(YEAR FROM start_date) = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "EXISTS (
+            SELECT 1 FROM jsonb_array_elements(categories_name) AS cat
+            WHERE (cat->>'id')::int = :category_id
+        )";
+      $params[':category_id'] = $categoryId;
+    }
+
+    // Hapus filter status
+
+    // Build WHERE
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "
+        SELECT *, 
+        TO_CHAR(start_date, 'YYYY-MM-DD') as formatted_start_date,
+        TO_CHAR(finish_date, 'YYYY-MM-DD') as formatted_finish_date,
+        EXTRACT(YEAR FROM start_date) as start_year,
+        EXTRACT(MONTH FROM start_date) as start_month,
+        EXTRACT(DAY FROM start_date) as start_day
+        FROM mv_research
+        $whereSql
+        ORDER BY start_date DESC
+        LIMIT :limit OFFSET :offset
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+
+    $stmt->bindValue(":limit", (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(":offset", (int)$offset, PDO::PARAM_INT);
+
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Decode JSONB categories_name untuk setiap hasil
+    foreach ($results as &$result) {
+      if (isset($result['categories_name'])) {
+        $result['categories'] = json_decode($result['categories_name'], true);
+        unset($result['categories_name']);
+      }
+
+      // Format tanggal jika diperlukan
+      if (isset($result['start_date'])) {
+        $date = new DateTime($result['start_date']);
+        $result['start_date_formatted'] = $date->format('Y-m-d');
+        $result['start_date_readable'] = $date->format('d F Y');
+      }
+
+      if (isset($result['finish_date'])) {
+        $date = new DateTime($result['finish_date']);
+        $result['finish_date_formatted'] = $date->format('Y-m-d');
+        $result['finish_date_readable'] = $date->format('d F Y');
+      }
+
+      // Hitung durasi (jika start_date dan finish_date ada)
+      if (isset($result['start_date']) && isset($result['finish_date'])) {
+        $start = new DateTime($result['start_date']);
+        $finish = new DateTime($result['finish_date']);
+        $interval = $start->diff($finish);
+        $result['duration_months'] = $interval->m + ($interval->y * 12);
+        $result['duration_days'] = $interval->days;
+      }
+    }
+
+    return $results;
+  }
+
+  // Get recent research for API
+  public function getRecentResearchForApi($limit = 5)
+  {
+    $sql = "
+        SELECT *, 
+        TO_CHAR(start_date, 'YYYY-MM-DD') as formatted_start_date,
+        TO_CHAR(finish_date, 'YYYY-MM-DD') as formatted_finish_date
+        FROM mv_research
+        ORDER BY start_date DESC
+        LIMIT :limit
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindValue(":limit", (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Decode categories
+    foreach ($results as &$result) {
+      if (isset($result['categories_name'])) {
+        $result['categories'] = json_decode($result['categories_name'], true);
+        unset($result['categories_name']);
+      }
+    }
+
+    return $results;
+  }
+
+  // Count research for pagination
+  public function countResearchForApi($search = '', $categoryId = null, $year = null)
+  {
+    $params = [];
+    $where = [];
+
+    if (!empty($search)) {
+      $where[] = "(LOWER(title) LIKE LOWER(:search) 
+                     OR LOWER(description) LIKE LOWER(:search))";
+      $params[':search'] = "%$search%";
+    }
+
+    if (!empty($year)) {
+      $where[] = "EXTRACT(YEAR FROM start_date) = :year";
+      $params[':year'] = $year;
+    }
+
+    if (!empty($categoryId)) {
+      $where[] = "EXISTS (
+            SELECT 1 FROM jsonb_array_elements(categories_name) AS cat
+            WHERE (cat->>'id')::int = :category_id
+        )";
+      $params[':category_id'] = $categoryId;
+    }
+
+    // Hapus filter status
+
+    // Build WHERE
+    $whereSql = "";
+    if (!empty($where)) {
+      $whereSql = "WHERE " . implode(" AND ", $where);
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM mv_research $whereSql";
+    $stmt = $this->conn->prepare($sql);
+
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return (int)$result['total'];
+  }
+
+  // Get available years for filtering (berdasarkan start_date)
+  public function getAvailableYears()
+  {
+    $sql = "
+        SELECT DISTINCT EXTRACT(YEAR FROM start_date) as year 
+        FROM mv_research 
+        ORDER BY year DESC
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return array_map('intval', $years);
+  }
 }

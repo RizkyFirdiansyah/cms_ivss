@@ -514,40 +514,40 @@ class NewsModel
     return array_map('intval', $years);
   }
 
-  // Get news by ID for API
-  public function getNewsByIdForApi($id)
-  {
-    $sql = "
-            SELECT *, 
-                  TO_CHAR(created_at, 'YYYY-MM-DD') as formatted_date,
-                  TO_CHAR(created_at, 'DD Month YYYY') as readable_date,
-                  EXTRACT(YEAR FROM created_at) as year,
-                  EXTRACT(MONTH FROM created_at) as month,
-                  EXTRACT(DAY FROM created_at) as day
-            FROM mv_news 
-            WHERE id = :id 
-            LIMIT 1
-        ";
+  // // Get news by ID for API
+  // public function getNewsByIdForApi($id)
+  // {
+  //   $sql = "
+  //           SELECT *, 
+  //                 TO_CHAR(created_at, 'YYYY-MM-DD') as formatted_date,
+  //                 TO_CHAR(created_at, 'DD Month YYYY') as readable_date,
+  //                 EXTRACT(YEAR FROM created_at) as year,
+  //                 EXTRACT(MONTH FROM created_at) as month,
+  //                 EXTRACT(DAY FROM created_at) as day
+  //           FROM mv_news 
+  //           WHERE id = :id 
+  //           LIMIT 1
+  //       ";
 
-    $stmt = $this->conn->prepare($sql);
-    $stmt->bindValue(":id", $id, PDO::PARAM_INT);
-    $stmt->execute();
+  //   $stmt = $this->conn->prepare($sql);
+  //   $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+  //   $stmt->execute();
 
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+  //   $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($result) {
-      // Format additional date fields
-      if (isset($result['created_at'])) {
-        $date = new DateTime($result['created_at']);
-        $result['created_at_iso'] = $date->format('Y-m-d\TH:i:sP');
-        $result['created_at_timestamp'] = $date->getTimestamp();
+  //   if ($result) {
+  //     // Format additional date fields
+  //     if (isset($result['created_at'])) {
+  //       $date = new DateTime($result['created_at']);
+  //       $result['created_at_iso'] = $date->format('Y-m-d\TH:i:sP');
+  //       $result['created_at_timestamp'] = $date->getTimestamp();
 
-        // Month name in English
-        $result['month_name'] = $date->format('F');
-        $result['day_name'] = $date->format('l');
-      }
-    }
+  //       // Month name in English
+  //       $result['month_name'] = $date->format('F');
+  //       $result['day_name'] = $date->format('l');
+  //     }
+  //   }
 
-    return $result ?: null;
-  }
+  //   return $result ?: null;
+  // }
 }
