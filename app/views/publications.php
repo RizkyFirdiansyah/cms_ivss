@@ -1,7 +1,3 @@
-<?php
-$page_title = "Publikasi";
-$page_breadcrumb = ["Pages", "Publikasi"];
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,7 +31,7 @@ $page_breadcrumb = ["Pages", "Publikasi"];
       <div class="row mx-1">
         <div class="card">
           <div class="card-header pb-0">
-            <h5 class="m-0">Manajemen Publikasi</h5>
+            <h5 class="m-0">Publikasi</h5>
           </div>
 
           <div class="card-body">
@@ -90,19 +86,19 @@ $page_breadcrumb = ["Pages", "Publikasi"];
         <div class="modal-body">
           <div id="add-publication-alert"></div>
           <div class="mb-3">
-            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
+            <label class="form-label">Judul Publikasi</label>
             <input name="title" type="text" class="form-control" required>
           </div>
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
+                <label class="form-label">Tahun Publikasi</label>
                 <input name="publication_year" type="number" class="form-control" min="1900" max="2030" value="<?= date('Y') ?>" required>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
+                <label class="form-label">Link Publikasi</label>
                 <input name="link" type="url" class="form-control" placeholder="https://example.com" required>
               </div>
             </div>
@@ -134,19 +130,19 @@ $page_breadcrumb = ["Pages", "Publikasi"];
         <div class="modal-body">
           <div id="edit-publication-alert"></div>
           <div class="mb-3">
-            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
+            <label class="form-label">Judul Publikasi</label>
             <input name="title" id="edit-title" type="text" class="form-control" required>
           </div>
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
+                <label class="form-label">Tahun Publikasi</label>
                 <input name="publication_year" id="edit-publication_year" type="number" class="form-control" min="1900" max="2030" required>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
+                <label class="form-label">Link Publikasi</label>
                 <input name="link" id="edit-link" type="url" class="form-control" placeholder="https://example.com" required>
               </div>
             </div>
@@ -206,7 +202,7 @@ $page_breadcrumb = ["Pages", "Publikasi"];
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script>
+  <script>
     // Global variables
     const BASE_URL = "<?= BASE_URL ?>";
     const DEFAULT_LIMIT = 5;
@@ -344,7 +340,7 @@ $page_breadcrumb = ["Pages", "Publikasi"];
         '<span class="text-muted">-</span>';
 
       const lastUpdated = pub.last_updated ? new Date(pub.last_updated).toLocaleDateString('id-ID') : '-';
-      
+
       let categoryIds = [];
       if (pub.category_ids) {
         if (Array.isArray(pub.category_ids)) {
@@ -354,7 +350,7 @@ $page_breadcrumb = ["Pages", "Publikasi"];
           categoryIds = pub.category_ids.split(',').map(id => id.trim()).filter(id => id !== '');
         }
       }
-      
+
       const categoryIdsJson = JSON.stringify(categoryIds);
 
       return `
@@ -376,19 +372,19 @@ $page_breadcrumb = ["Pages", "Publikasi"];
             </a>
           </td>
           <td class="text-center text-sm align-middle">${lastUpdated}</td>
-          <td class="text-center align-middle">
-            <button class="btn btn-xs btn-secondary me-1" 
+          <td class="text-center">
+            <button class="btn mb-0 px-3 btn-warning btn-sm text-xs" 
               onclick="showEditPublication(this)"
               data-id="${pub.id}"
               data-title="${pub.title ? pub.title.replace(/"/g, '&quot;') : ''}"
               data-link="${pub.link || ''}"
               data-year="${pub.publication_year}"
               data-categories='${categoryIdsJson}'>
-              <i class="fa fa-edit me-1"></i>
+              <i class="fa fa-edit"></i>
             </button>
-            <button class="btn btn-xs btn-danger" 
+            <button class="btn mb-0 px-3 btn-danger btn-sm text-xs" 
               onclick="deletePublication(${pub.id})">
-              <i class="fa fa-trash me-1"></i>
+              <i class="fa fa-trash"></i>
             </button>
           </td>
         </tr>
@@ -399,7 +395,7 @@ $page_breadcrumb = ["Pages", "Publikasi"];
     function loadPublications(page = 1, search = '', category = '', limit = DEFAULT_LIMIT) {
       const tbody = $('#publicationTableBody');
       const pagination = $('#pagination');
-      tbody.html(`<tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr>`);
+      tbody.html(`<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</td></tr>`);
       pagination.empty();
 
       const requestData = {
@@ -474,11 +470,14 @@ $page_breadcrumb = ["Pages", "Publikasi"];
     // Add publication
     $("#form-add-publication").on("submit", function(e) {
       e.preventDefault();
-      
+
       const selectedCategories = $('#form-add-publication select').val() || [];
-      
+
       const formData = $(this).serializeArray();
-      formData.push({name: 'categories', value: JSON.stringify(selectedCategories)});
+      formData.push({
+        name: 'categories',
+        value: JSON.stringify(selectedCategories)
+      });
 
       $.ajax({
         url: BASE_URL + "/publikasi/create",
@@ -507,7 +506,10 @@ $page_breadcrumb = ["Pages", "Publikasi"];
 
       const selectedCategories = $('#edit-categories').val() || [];
       const formData = $(this).serializeArray();
-      formData.push({name: 'categories', value: JSON.stringify(selectedCategories)});
+      formData.push({
+        name: 'categories',
+        value: JSON.stringify(selectedCategories)
+      });
 
       $.ajax({
         url: BASE_URL + "/publikasi/update",
@@ -536,7 +538,9 @@ $page_breadcrumb = ["Pages", "Publikasi"];
         $.ajax({
           url: BASE_URL + "/publikasi/delete",
           method: "POST",
-          data: { id: id },
+          data: {
+            id: id
+          },
           dataType: "json",
           success: function(res) {
             showAlert(res.message, res.success ? "success" : "error");

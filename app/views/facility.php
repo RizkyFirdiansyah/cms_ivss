@@ -266,7 +266,7 @@
                     onclick="showDetailFacility(${f.id})">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn mb-0 px-3 btn-secondary btn-sm text-xs edit-btn"
+                <button class="btn mb-0 px-3 btn-warning btn-sm text-xs edit-btn"
                   onclick="showEditFacility(this)"
                   data-id="${f.id}"
                   data-name="${safeName}"
@@ -289,7 +289,7 @@
     function loadFacilities(page = 1, search = '', limit = DEFAULT_LIMIT) {
       const tbody = $('#facility-container');
       const pagination = $('#pagination');
-      tbody.html(`<div class="text-center text-muted py-3">Memuat data...</div>`);
+      tbody.html(`<div class="col-12 text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</div>`);
       pagination.empty();
       console.log(search);
 

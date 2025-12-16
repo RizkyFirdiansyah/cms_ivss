@@ -35,6 +35,7 @@ class AuthController extends BaseController
       // Set session
       $_SESSION['id'] = $user['id'];
       $_SESSION['email'] = $user['email'];
+      $_SESSION['name'] = $user['name'];
       $_SESSION['role'] = $user['role'];
 
       // Set cookie (7 hari)

@@ -35,17 +35,13 @@
                 <div class="card-body">
                   <form role="form" action="<?= 'login' ?>" method="POST">
                     <div class="mb-3">
-                      <input type="email" class="form-control form-control-lg" placeholder="Email" aria-label="Email" name="email">
+                      <input type="email" class="form-control form-control-lg" placeholder="Email" aria-label="Email" name="email" required>
                     </div>
                     <div class="mb-3">
-                      <input type="password" class="form-control form-control-lg" placeholder="Password" aria-label="Password" name="password">
-                    </div>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" id="rememberMe">
-                      <label class="form-check-label" for="rememberMe">Remember me</label>
+                      <input type="password" class="form-control form-control-lg" placeholder="Password" aria-label="Password" name="password" required>
                     </div>
                     <div class="text-center">
-                      <button type="submit" class="btn btn-lg btn-primary btn-lg w-100 mt-4 mb-0">Sign in</button>
+                      <button type="submit" class="btn btn-lg btn-primary btn-lg w-100 mb-0">Sign in</button>
                     </div>
                   </form>
                 </div>
@@ -64,24 +60,6 @@
       </div>
     </section>
   </main>
-  <!--   Core JS Files   -->
-  <script src="../../assets/js/core/popper.min.js"></script>
-  <script src="../../assets/js/core/bootstrap.min.js"></script>
-  <script src="../../assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="../../assets/js/plugins/smooth-scrollbar.min.js"></script>
-  <script>
-    var win = navigator.platform.indexOf('Win') > -1;
-    if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
-      }
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-    }
-  </script>
-  <!-- Github buttons -->
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
-  <script src="../../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
 </body>
 
 </html>

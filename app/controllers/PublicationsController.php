@@ -12,7 +12,7 @@ class PublicationsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
-    parent::requireRole('kepala');
+    parent::requireRoles(['kepala', 'dosen', 'mahasiswa']);
 
     $this->publication = new PublicationsModel();
     $this->category = new CategoryModel();

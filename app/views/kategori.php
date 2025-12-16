@@ -223,9 +223,7 @@
               </div>
             </div>
           </td>
-          <td class="text-center">
-            <span class="badge bg-success">Aktif</span>
-          </td>
+          <td class="text-center text-lg"><i class="fa-solid fa-circle-check text-success"></i></td>
           <td class="text-center">
             <button class="btn mb-0 px-3 btn-warning btn-sm text-xs" 
               onclick="showEditCategory(${cat.id}, '${cat.name}')"
@@ -249,10 +247,7 @@
 
       tbody.html(`
         <tr>
-          <td colspan="3" class="text-center text-muted py-4">
-            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-            Memuat data...
-          </td>
+          <td colspan="3" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</td>
         </tr>
       `);
       pagination.empty();

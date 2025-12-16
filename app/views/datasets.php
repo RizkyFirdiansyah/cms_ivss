@@ -249,7 +249,7 @@
           <td>
             <div class="d-flex flex-column justify-content-center">
               <h6 class="mb-0 text-sm">${dataset.title}</h6>
-              ${isOwner ? '<span class="text-xs text-success">Milik Anda</span>' : ''}
+              ${isOwner ? '<span class="text-xs text-success">Pemilik</span>' : ''}
             </div>
           </td>
           <td class="text-center text-sm align-middle">${dataset.author_name || '-'}</td>
@@ -262,17 +262,17 @@
           <td class="text-center text-sm align-middle">${updatedDate}</td>
           <td class="text-center align-middle">
             ${canEditDelete ? `
-              <button class="btn btn-xs btn-secondary me-1" 
+              <button class="btn mb-0 px-3 btn-warning btn-sm text-xs" 
                 onclick="showEditDataset(this)"
                 data-id="${dataset.id}"
                 data-title="${dataset.title ? dataset.title.replace(/"/g, '&quot;') : ''}"
                 data-link="${dataset.link || ''}"
                 data-author="${dataset.author_name || ''}">
-                <i class="fa fa-edit me-1"></i>
+                <i class="fa fa-edit"></i>
               </button>
-              <button class="btn btn-xs btn-danger" 
+              <button class="btn mb-0 px-3 btn-danger btn-sm text-xs" 
                 onclick="deleteDataset(${dataset.id})">
-                <i class="fa fa-trash me-1"></i>
+                <i class="fa fa-trash"></i>
               </button>
             ` : `
               <span class="text-muted text-xs">Read Only</span>
@@ -286,7 +286,7 @@
     function loadDatasets(page = 1, search = '', filter = '', limit = DEFAULT_LIMIT) {
       const tbody = $('#datasetTableBody');
       const pagination = $('#pagination');
-      tbody.html(`<tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr>`);
+      tbody.html(`<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</td></tr>`);
       pagination.empty();
 
       const requestData = {
@@ -303,7 +303,7 @@
         data: requestData,
         success: function(res) {
           tbody.empty();
-          
+
           // Simpan user role untuk akses kontrol
           if (res.current_user) {
             currentUserRole = res.current_user.role;
@@ -362,7 +362,7 @@
     // Add dataset
     $("#form-add-dataset").on("submit", function(e) {
       e.preventDefault();
-      
+
       const formData = $(this).serializeArray();
 
       $.ajax({
@@ -418,7 +418,9 @@
         $.ajax({
           url: BASE_URL + "/datasets/delete",
           method: "POST",
-          data: { id: id },
+          data: {
+            id: id
+          },
           dataType: "json",
           success: function(res) {
             showAlert(res.message, res.success ? "success" : "error");
@@ -449,7 +451,7 @@
       }, 300);
     });
 
-    
+
     $(document).ready(function() {
       // initial load datasets
       loadDatasets(1, '', '', DEFAULT_LIMIT);

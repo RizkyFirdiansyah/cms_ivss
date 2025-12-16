@@ -28,50 +28,52 @@ class ResearchController extends BaseController
     include '../app/views/research.php';
   }
 
-  // Get All Research
-  // Get All Research
-// Get All Research
-public function getList()
-{
+  // Get All Research dengan role-based filtering
+  public function getList()
+  {
     try {
-        $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
-        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-        $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
-        $status = isset($_GET['status']) ? trim($_GET['status']) : '';
-        
-        $offset = ($page - 1) * $limit;
-        
-        // Get current user data
-        $currentUser = $this->user;
-        $userId = $currentUser['id'];
-        $userRole = $currentUser['role'];
-        
-        // Debug log
-        error_log("Research List Params: user_id={$userId}, role={$userRole}, search={$search}, category_id={$category_id}, status={$status}");
-        
-        // Tambahkan parameter user_id dan user_role
-        $data = $this->research->getResearch($limit, $offset, $search, $category_id, $status, $userId, $userRole);
-        $total = $this->research->countResearch($search, $category_id, $status, $userId, $userRole);
-        
-        $response_data = [
-            'success' => true,
-            'data' => $data,
-            'total' => $total,
-        ];
-        
-        $this->jsonResponse($response_data);
+      $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+      $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
+      $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+      $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
+      $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+
+      $offset = ($page - 1) * $limit;
+
+      // Get current user data
+      $currentUser = $this->user;
+      $userId = $currentUser['id'];
+      $userRole = $currentUser['role'];
+
+      // Untuk mahasiswa, tidak perlu filter search/category jika tidak ada research
+      if ($userRole === 'mahasiswa' && empty($search) && empty($category_id) && empty($status)) {
+        // Tidak perlu log khusus
+      }
+
+      // Get data dengan filter role
+      $data = $this->research->getResearch($limit, $offset, $search, $category_id, $status, $userId, $userRole);
+      $total = $this->research->countResearch($search, $category_id, $status, $userId, $userRole);
+
+      $response_data = [
+        'success' => true,
+        'data' => $data,
+        'total' => $total,
+        'user_role' => $userRole
+      ];
+
+      $this->jsonResponse($response_data);
     } catch (Exception $e) {
-        error_log("Research List Error: " . $e->getMessage());
-        $this->jsonResponse([
-            'success' => false,
-            'message' => 'Error: ' . $e->getMessage(),
-            'data' => [],
-            'total' => 0
-        ]);
+      error_log("Research List Error: " . $e->getMessage());
+      $this->jsonResponse([
+        'success' => false,
+        'message' => 'Error: ' . $e->getMessage(),
+        'data' => [],
+        'total' => 0
+      ]);
     }
-}
-  // Get All Categories (dropdown)
+  }
+
+  // Get All Categories
   public function getCategories()
   {
     try {
@@ -89,11 +91,14 @@ public function getList()
     }
   }
 
-  // Get All Users (for participants dropdown)
+  // Get All Users untuk dropdown participants
   public function getUsers()
   {
     try {
-      $users = $this->userModel->getAllActiveUsers();
+      // Dapatkan semua user kecuali yang sedang login
+      $currentUser = $this->user;
+      $users = $this->userModel->getAllUsersExcept($currentUser['id']);
+
       $this->jsonResponse([
         'success' => true,
         'data' => $users
@@ -107,13 +112,22 @@ public function getList()
     }
   }
 
-  // Create New Research
+  // Create New Research dengan validasi role
   public function create()
   {
     $currentUser = $this->user;
 
+    // Validasi role: mahasiswa tidak bisa membuat research
+    if ($currentUser['role'] === 'mahasiswa') {
+      $this->jsonResponse([
+        "success" => false,
+        "message" => "Maaf, mahasiswa tidak dapat membuat penelitian."
+      ], 403);
+      return;
+    }
+
     try {
-      // Handle categories array
+      // Parse categories
       $categoryIds = [];
       if (!empty($_POST["categories"])) {
         if (is_string($_POST["categories"])) {
@@ -121,13 +135,11 @@ public function getList()
         } else {
           $categoryIds = $_POST["categories"];
         }
-
-        // Validasi IDs integer
         $categoryIds = array_map('intval', $categoryIds);
         $categoryIds = array_filter($categoryIds);
       }
 
-      // Handle participants array
+      // Parse participants
       $participantIds = [];
       if (!empty($_POST["participants"])) {
         if (is_string($_POST["participants"])) {
@@ -135,18 +147,15 @@ public function getList()
         } else {
           $participantIds = $_POST["participants"];
         }
-
-        // Validasi IDs integer
         $participantIds = array_map('intval', $participantIds);
         $participantIds = array_filter($participantIds);
       }
 
-      // Parse dates
+      // Parse data
       $start_date = !empty($_POST["start_date"]) ? $_POST["start_date"] : date('Y-m-d');
       $finish_date = !empty($_POST["finish_date"]) ? $_POST["finish_date"] : null;
-
-      // Parse budget
       $budget = !empty($_POST["budget"]) ? (int)$_POST["budget"] : 0;
+      $max_participants = !empty($_POST["max_participants"]) ? (int)$_POST["max_participants"] : 10;
 
       $save = $this->research->saveResearch([
         "created_by_user_id" => $currentUser["id"],
@@ -154,6 +163,7 @@ public function getList()
         "status" => $_POST["status"] ?? 'ongoing',
         "description" => $_POST["description"] ?? '',
         "budget" => $budget,
+        "max_participants" => $max_participants,
         "start_date" => $start_date,
         "finish_date" => $finish_date,
         "categories" => $categoryIds,
@@ -176,12 +186,12 @@ public function getList()
       error_log("Create Research Exception: " . $e->getMessage());
       $this->jsonResponse([
         "success" => false,
-        "message" => "Terjadi kesalahan sistem."
+        "message" => $e->getMessage()
       ], 500);
     }
   }
 
-  // Update Research - PERBAIKAN: Ambil data existing dulu
+  // Update Research dengan validasi permission
   public function update()
   {
     try {
@@ -194,7 +204,18 @@ public function getList()
         ], 400);
       }
 
-      // Ambil data research yang existing
+      // Validasi permission
+      $currentUser = $this->user;
+      $canEdit = $this->research->canUserEdit($id, $currentUser['id'], $currentUser['role']);
+
+      if (!$canEdit) {
+        return $this->jsonResponse([
+          "success" => false,
+          "message" => "Maaf, Anda tidak memiliki izin untuk mengedit penelitian ini."
+        ], 403);
+      }
+
+      // Ambil data existing
       $existingResearch = $this->research->getById($id);
       if (!$existingResearch) {
         return $this->jsonResponse([
@@ -203,7 +224,7 @@ public function getList()
         ], 404);
       }
 
-      // Validasi categories
+      // Parse categories
       $categoryIds = [];
       if (!empty($_POST["categories"])) {
         if (is_string($_POST["categories"])) {
@@ -211,13 +232,11 @@ public function getList()
         } else {
           $categoryIds = $_POST["categories"];
         }
-
-        // Pastikan IDs adalah integer
         $categoryIds = array_map('intval', $categoryIds);
         $categoryIds = array_filter($categoryIds);
       }
 
-      // Validasi participants
+      // Parse participants
       $participantIds = [];
       if (!empty($_POST["participants"])) {
         if (is_string($_POST["participants"])) {
@@ -225,26 +244,25 @@ public function getList()
         } else {
           $participantIds = $_POST["participants"];
         }
-
-        // Pastikan IDs adalah integer
         $participantIds = array_map('intval', $participantIds);
         $participantIds = array_filter($participantIds);
       }
 
-      // Parse dates - gunakan existing value jika tidak ada input baru
+      // Parse data - gunakan existing jika tidak ada input baru
       $start_date = $_POST["start_date"] ?? $existingResearch['start_date'];
       $finish_date = $_POST["finish_date"] ?? $existingResearch['finish_date'];
-
-      // Parse budget - gunakan existing value jika tidak ada input baru
       $budget = !empty($_POST["budget"]) ? (int)$_POST["budget"] : $existingResearch['budget'];
+      $max_participants = !empty($_POST["max_participants"]) ? (int)$_POST["max_participants"] : $existingResearch['max_participants'];
 
-      // Simpan data ke database
+      // Simpan data
       $save = $this->research->saveResearch([
         "id" => $id,
+        "created_by_user_id" => $existingResearch['created_by_user_id'],
         "title" => $_POST["title"] ?? $existingResearch['title'],
         "status" => $_POST["status"] ?? $existingResearch['status'],
         "description" => $_POST["description"] ?? $existingResearch['description'],
         "budget" => $budget,
+        "max_participants" => $max_participants,
         "start_date" => $start_date,
         "finish_date" => $finish_date,
         "categories" => $categoryIds,
@@ -259,12 +277,12 @@ public function getList()
       error_log("Update Research Exception: " . $e->getMessage());
       $this->jsonResponse([
         "success" => false,
-        "message" => "Terjadi kesalahan sistem."
+        "message" => $e->getMessage()
       ], 500);
     }
   }
 
-  // Delete Research
+  // Delete Research dengan validasi permission
   public function delete()
   {
     try {
@@ -275,6 +293,17 @@ public function getList()
           "success" => false,
           "message" => "ID research tidak valid."
         ], 400);
+      }
+
+      // Validasi permission
+      $currentUser = $this->user;
+      $canEdit = $this->research->canUserEdit($id, $currentUser['id'], $currentUser['role']);
+
+      if (!$canEdit) {
+        return $this->jsonResponse([
+          "success" => false,
+          "message" => "Maaf, Anda tidak memiliki izin untuk menghapus penelitian ini."
+        ], 403);
       }
 
       $del = $this->research->delete($id);

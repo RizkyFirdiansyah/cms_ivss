@@ -264,7 +264,7 @@
     function loadFeedback(page = 1, search = '', limit = DEFAULT_LIMIT) {
       const tbody = $('#feedbackTableBody');
       const pagination = $('#pagination');
-      tbody.html(`<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>`);
+      tbody.html(`<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</td></tr>`);
       pagination.empty();
 
       $.ajax({
