@@ -285,6 +285,27 @@ try {
             }
             break;
 
+        case 'register':
+            require_once __DIR__ . '/controllers/RegistrationApiController.php';
+            $controller = new RegistrationApiController();
+
+            // Check HTTP method untuk menentukan endpoint
+            if ($resourceId === 'submit') {
+                $controller->submit();
+            } elseif ($resourceId === 'check') {
+                $controller->check();
+            } elseif ($resourceId === 'program-studi') {
+                $controller->getProgramStudi();
+            } else {
+                // Default response atau error
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Endpoint tidak ditemukan'
+                ]);
+            }
+            break;
+
         default:
             http_response_code(404);
             echo json_encode([

@@ -431,7 +431,7 @@
     function loadNews(page = 1, search = '', category = '', limit = DEFAULT_LIMIT) {
       const container = $('#news-container');
       const pagination = $('#pagination');
-      container.html(`<div class="col-12 text-center text-muted py-5"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</div>`);
+      container.html(`<div class="col-12 text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</div>`);
       pagination.empty();
 
       const requestData = {

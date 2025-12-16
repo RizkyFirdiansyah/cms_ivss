@@ -118,6 +118,21 @@ class UserModel
     }
   }
 
+  // get all User
+  public function getAllUsers()
+  {
+    $query = "SELECT id, name FROM users ORDER BY name ASC";
+    try {
+      $stmt = $this->conn->prepare($query);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getAllUsers): " . $e->getMessage());
+      return false;
+    }
+  }
+
+
   // Delete User
   public function deleteUser($id)
   {
@@ -132,7 +147,6 @@ class UserModel
     }
   }
 
-  // Helpers
   // Refresh Materialized Views
   public function refreshMaterializedViews()
   {
@@ -171,6 +185,32 @@ class UserModel
     } catch (PDOException $e) {
       error_log("DB Error (getUserById): " . $e->getMessage());
       return false;
+    }
+  }
+
+  // Method untuk mendapatkan semua user kecuali yang dikecualikan
+  public function getAllUsersExcept($excludeUserId)
+  {
+    try {
+      $query = "SELECT 
+                        id, 
+                        name, 
+                        email, 
+                        role,
+                        CONCAT(name, ' (', role, ')') as display_name
+                      FROM users 
+                      WHERE id != :exclude_id 
+                      AND is_active = 'aktif'
+                      ORDER BY role DESC, name ASC";
+
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindValue(':exclude_id', $excludeUserId, PDO::PARAM_INT);
+      $stmt->execute();
+
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DB Error (getAllUsersExcept): " . $e->getMessage());
+      return [];
     }
   }
 }

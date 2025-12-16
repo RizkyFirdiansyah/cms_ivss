@@ -8,6 +8,7 @@ require_once '../app/controllers/AuthController.php';
 require_once '../app/controllers/ProfileController.php';
 require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/UsersController.php';
+require_once '../app/controllers/RegistrationController.php';
 require_once '../app/controllers/FacilitiesController.php';
 require_once '../app/controllers/NewsController.php';
 require_once '../app/controllers/CategoryController.php';
@@ -69,6 +70,26 @@ switch ($url) {
 
   case 'user/delete':
     (new UsersController())->delete();
+    break;
+
+  case 'registration/pending':
+    (new RegistrationController())->getPending();
+    break;
+
+  case 'registration/detail':
+    (new RegistrationController())->getDetail();
+    break;
+
+  case 'registration/approve':
+    (new RegistrationController())->approve();
+    break;
+
+  case 'registration/reject':
+    (new RegistrationController())->reject();
+    break;
+
+  case 'registration/pending-count':
+    (new RegistrationController())->getPendingCount();
     break;
 
   case 'profile':
@@ -397,7 +418,7 @@ switch ($url) {
   case 'datasets/delete':
     (new DatasetsController())->delete();
     break;
-  
+
   case 'datasets/update':
     (new DatasetsController())->update();
   case 'contact-page':

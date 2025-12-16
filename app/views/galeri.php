@@ -1,11 +1,3 @@
-<?php
-// app/views/gallery.php
-
-$page_title = "Galeri";
-$page_breadcrumb = ["Pages", "Galeri"];
-
-$galleryItems = $galleryItems ?? [];
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -209,16 +201,16 @@ $galleryItems = $galleryItems ?? [];
             <div class="card-body p-3">
               <h6 class="mb-1 fw-bold">${g.title}</h6>
               <div class="d-flex gap-2">
-                <button class="btn mb-0 px-3 btn-secondary btn-sm text-xs edit-btn"
+                <button class="btn mb-0 px-3 btn-warning btn-sm text-xs"
                   onclick="showEditGallery(this)"
                   data-id="${g.id}"
                   data-title="${safeTitle}"
                   data-link="${g.link}">
-                  Edit
+                  <i class="fa fa-edit"></i>
                 </button>
                 <button class="btn mb-0 px-3 btn-danger btn-sm text-xs"
                   onclick="deleteGallery(${g.id})">
-                  Delete
+                  <i class="fa fa-trash"></i>
                 </button>
               </div>
             </div>
@@ -231,7 +223,7 @@ $galleryItems = $galleryItems ?? [];
     function loadGallery(page = 1, search = '', limit = DEFAULT_LIMIT) {
       const container = $('#gallery-container');
       const pagination = $('#pagination');
-      container.html(`<div class="text-center text-muted py-3">Memuat data...</div>`);
+      container.html(`<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data...</div>`);
       pagination.empty();
 
       $.ajax({
@@ -249,7 +241,7 @@ $galleryItems = $galleryItems ?? [];
             container.append(`<div class="col-12 text-center text-muted">Tidak ada data gambar.</div>`);
             return;
           }
-          
+
           // Render cards
           res.data.forEach(g => container.append(renderGalleryCard(g)));
           console.log('Gallery data loaded:', res);
@@ -307,12 +299,16 @@ $galleryItems = $galleryItems ?? [];
       const title = $el.data('title');
       const file_name = $el.data('link');
 
-      console.log('Editing gallery item:', { id, title, file_name });
+      console.log('Editing gallery item:', {
+        id,
+        title,
+        file_name
+      });
 
       $('#edit-id').val(id);
       $('#edit-title').val(title);
       $('#edit-old-file-path').val(file_name);
-      
+
       // Set preview image
       const imageUrl = `${BASE_URL}/uploads/gallery/${file_name}`;
       console.log('Image URL:', imageUrl);
@@ -329,7 +325,7 @@ $galleryItems = $galleryItems ?? [];
     $("#form-edit-gallery").on("submit", function(e) {
       e.preventDefault();
       const fd = new FormData(this);
-      
+
       // Debug FormData
       console.log('Form elements:');
       for (let [key, value] of fd.entries()) {
@@ -372,7 +368,9 @@ $galleryItems = $galleryItems ?? [];
         $.ajax({
           url: BASE_URL + "/galeri/delete",
           method: "POST",
-          data: { id: id },
+          data: {
+            id: id
+          },
           dataType: "json",
           success: function(res) {
             showAlert(res.message, res.success ? "success" : "error");

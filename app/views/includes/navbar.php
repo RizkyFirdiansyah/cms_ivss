@@ -24,14 +24,6 @@ $page_breadcrumb = $page_breadcrumb ?? ['Pages', $page_title];
       <div class="ms-md-auto pe-md-3 d-flex align-items-center">
       </div>
       <ul class="navbar-nav justify-content-end">
-        <li class="nav-item dropdown pe-2 d-flex align-items-center">
-          <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa fa-bell cursor-pointer"></i>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
-            <li><a class="dropdown-item border-radius-md" href="#">Tidak ada notifikasi</a></li>
-          </ul>
-        </li>
         <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
           <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
             <div class="sidenav-toggler-inner">
@@ -45,7 +37,3 @@ $page_breadcrumb = $page_breadcrumb ?? ['Pages', $page_title];
     </div>
   </div>
 </nav>
-<!-- <li class="nav-item d-flex align-items-center">
-
- <span class="text-white ms-2"><?= htmlspecialchars($user['nama'] ?? '') ?></span>
-</li> -->

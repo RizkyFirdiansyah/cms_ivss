@@ -11,7 +11,7 @@ class BaseController
     if (session_status() === PHP_SESSION_NONE) {
       session_start();
     }
-
+    
     // Inisialisasi model umum (boleh digunakan semua controller)
     $this->profileModel = new ProfileModel();
 

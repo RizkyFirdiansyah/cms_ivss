@@ -77,7 +77,7 @@ $role = $_SESSION['role'] ?? 'guest';
 
       <?php elseif ($role === 'dosen'): ?>
         <!-- MENU KHUSUS DOSEN -->
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Mahasiswa Bimbingan</a></li>
+        <!-- <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Mahasiswa Bimbingan</a></li> -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/publikasi"><i class="ni ni-books"></i> Publikasi</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
@@ -86,7 +86,7 @@ $role = $_SESSION['role'] ?? 'guest';
       <?php elseif ($role === 'mahasiswa'): ?>
         <!-- MENU KHUSUS MAHASISWA -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/berita"><i class="ni ni-paper-diploma"></i> Berita</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Bimbingan</a></li>
+        <!-- <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bimbingan"><i class="ni ni-hat-3"></i> Bimbingan</a></li> -->
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/penelitian"><i class="ni ni-atom"></i> Penelitian</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/datasets"><i class="ni ni-folder-17"></i> Dataset</a></li>
       <?php endif; ?>
@@ -96,16 +96,42 @@ $role = $_SESSION['role'] ?? 'guest';
         <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account</h6>
       </li>
       <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/profile"><i class="ni ni-circle-08"></i> Profile</a></li>
-      <li id="logout" class="nav-item"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout"><i class="ni ni-user-run"></i> Logout</a></li>
+      <li class="nav-item">
+        <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+          <i class="ni ni-user-run"></i> Logout
+        </a>
+      </li>
       <script>
-        const logout = document.querySelector('#logout');
-        logout.addEventListener('click', function() {
-          const confirmLogout = confirm('Apakah Anda yakin ingin logout?');
-          if (confirmLogout) {
-            window.location.href = '<?= BASE_URL ?>/logout';
-          }
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('Logout modal ready');
+
+          $('#logoutConfirmModal').on('show.bs.modal', function(event) {
+            console.log('Logout confirmation modal shown');
+          });
         });
       </script>
     </ul>
   </div>
+
+  <!-- Modal Konfirmasi Logout -->
+  <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold text-dark" id="logoutConfirmLabel">Konfirmasi Logout</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <i class="fa fa-sign-out-alt bg-gradient-danger mb-3 p-3 text-white rounded-circle" style="font-size: 2rem;"></i>
+          <p class="mb-0 text-sm">Apakah Anda yakin ingin logout dari sistem?</p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center">
+          <button type="button" class="btn btn-sm bg-gradient-secondary" data-bs-dismiss="modal">Batal</button>
+          <a href="<?= BASE_URL ?>/logout" class="btn btn-sm bg-gradient-danger">Ya, Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Modal Konfirmasi Logout -->
+
 </aside>
