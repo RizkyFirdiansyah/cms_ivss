@@ -272,6 +272,23 @@ try {
             }
             break;
 
+        case 'research':
+            require_once __DIR__ . '/controllers/ResearchApiController.php';
+            $controller = new ResearchApiController();
+            if ($resourceId === 'header') {
+                $controller->header();
+                break;
+            } else if ($resourceId === 'filters') {
+                $controller->filters();
+                break;
+            } else if (is_numeric($resourceId)) {
+                $controller->show((int)$resourceId);
+                break;
+            } else {
+                $controller->index();
+            }
+            break;
+
         case 'contact':
             require_once __DIR__ . '/controllers/ContactApiController.php';
             $controller = new ContactApiController();

@@ -10,7 +10,6 @@ class NewsApiController extends ApiBaseController
 
   public function __construct()
   {
-    // parent::__construct();
     $this->newsModel = new NewsModel();
     $this->newsPageModel = new NewsPageModel();
   }
