@@ -28,6 +28,7 @@ require_once '../app/controllers/ResearchPageController.php';
 require_once '../app/controllers/ResearchController.php';
 require_once '../app/controllers/DatasetsController.php';
 require_once '../app/controllers/ContactPageController.php';
+require_once '../app/controllers/BootcampController.php';
 require_once '../app/models/UserModel.php';
 
 // Ambil parameter URL (misalnya: login, logout, dashboard)
@@ -431,6 +432,34 @@ switch ($url) {
 
   case 'contact-page/update':
     (new ContactPageController())->update();
+    break;
+
+  case 'bootcamp':
+    (new BootcampController())->index();
+    break;
+
+  case 'bootcamp/getDetail':
+    (new BootcampController())->getDetail();
+    break;
+
+  case 'bootcamp/list':
+    (new BootcampController())->getList();
+    break;
+
+  case 'bootcamp/categories':
+    (new BootcampController())->getCategories();
+    break;
+  
+  case 'bootcamp/create':
+    (new BootcampController())->create();
+    break;
+
+  case 'bootcamp/update':
+    (new BootcampController())->update();
+    break;
+
+  case 'bootcamp/delete':
+    (new BootcampController())->delete();
     break;
 
   default:
