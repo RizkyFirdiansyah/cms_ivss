@@ -5,7 +5,6 @@ class CategoryModel
 {
   private $conn;
 
-
   public function __construct()
   {
     $db = new Database();

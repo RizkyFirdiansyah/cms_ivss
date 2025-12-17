@@ -307,7 +307,7 @@ class ResearchModel
   // Check if user can edit research (creator only)
   public function canUserEdit($researchId, $userId, $userRole)
   {
-    if ($userRole === 'kepala_lab' || $userRole === 'admin') {
+    if ($userRole === 'kepala') {
       return true;
     }
 

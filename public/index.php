@@ -54,6 +54,26 @@ switch ($url) {
     (new DashboardController())->index();
     break;
 
+  case 'dashboard/getDashboardData':
+    (new DashboardController())->getDashboardData();
+    break;
+
+  case 'dashboard/getRecentDatasets':
+    (new DashboardController())->getRecentDatasets();
+    break;
+
+  case 'dashboard/getRecentFeedback':
+    (new DashboardController())->getRecentFeedback();
+    break;
+
+  case 'dashboard/getTotals':
+    (new DashboardController())->getTotals();
+    break;
+
+  case 'dashboard/getRoleSummary':
+    (new DashboardController())->getRoleSummary();
+    break;
+
   case 'users':
     (new UsersController())->index();
     break;
