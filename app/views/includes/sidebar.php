@@ -43,7 +43,7 @@ $role = $_SESSION['role'] ?? 'guest';
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/galeri"><i class="ni ni-image"></i> Galeri</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/kategori"><i class="ni ni-tag"></i> Kategori</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/feedback"><i class="ni ni-chat-round"></i> Feedback</a></li>
-
+        <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/bootcamp"><i class="ni ni-spaceship"></i> Bootcamp</a></li>
 
         <!-- GROUP: Web Profile Management -->
         <li class="nav-item mt-3">
