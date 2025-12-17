@@ -324,13 +324,6 @@
           const totalPages = Math.max(1, Math.ceil(total / limit));
           let html = '';
 
-          // Previous button
-          if (page > 1) {
-            html += `<button class="btn btn-sm btn-outline-primary mx-1" onclick="loadDatasets(${page - 1}, '${encodeURIComponent(search)}', '${filter}', ${limit})">
-                      <i class="fas fa-chevron-left"></i>
-                    </button>`;
-          }
-
           // Page numbers
           const startPage = Math.max(1, page - 2);
           const endPage = Math.min(totalPages, startPage + 4);
@@ -338,13 +331,6 @@
           for (let i = startPage; i <= endPage; i++) {
             const cls = (i === page) ? 'btn-primary' : 'btn-outline-primary';
             html += `<button class="btn btn-sm px-3 ${cls} mx-1" onclick="loadDatasets(${i}, '${encodeURIComponent(search)}', '${filter}', ${limit})">${i}</button>`;
-          }
-
-          // Next button
-          if (page < totalPages) {
-            html += `<button class="btn btn-sm btn-outline-primary mx-1" onclick="loadDatasets(${page + 1}, '${encodeURIComponent(search)}', '${filter}', ${limit})">
-                      <i class="fas fa-chevron-right"></i>
-                    </button>`;
           }
 
           pagination.html(html);
