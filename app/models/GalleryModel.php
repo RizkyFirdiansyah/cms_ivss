@@ -111,4 +111,12 @@ class GalleryModel
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
+
+  // get all gallery for api
+  public function getAll()
+  {
+    $stmt = $this->conn->prepare("SELECT * FROM gallery");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
 }

@@ -14,69 +14,54 @@ class GalleryApiController extends ApiBaseController
     $this->galleryPageModel = new GalleryPageModel();
   }
 
-
-  // index
   public function index()
   {
     try {
-      $page = $this->getIntParam('page', false) ?? 1;
-      $perPage = $this->getIntParam('per_page', false) ?? 12;
+      // Get all gallery items
+      $items = $this->galleryModel->getAll();
 
-      // Validate pagination parameters
-      if ($page < 1 || $perPage < 1 || $perPage > 100) {
-        throw new Exception('Invalid pagination parameters', 400);
-      }
+      // Get page header
+      $header = $this->galleryPageModel->getHeader();
 
-      $offset = ($page - 1) * $perPage;
-
-      // Fetch gallery items
-      $items = $this->galleryModel->getGallery($perPage, $offset, '');
-
-      if (!is_array($items)) {
-        throw new Exception('Failed to fetch gallery items', 500);
-      }
-
-      // Get total count
-      $total = $this->galleryModel->countGallery('');
-
+      // Prepare response
       $response = [
+        'header' => $header,
         'items' => $items,
-        'pagination' => [
-          'page' => $page,
-          'per_page' => $perPage,
-          'total' => $total,
-          'pages' => ceil($total / $perPage)
-        ]
+        'total' => count($items)
       ];
 
-      $this->sendSuccess($response, 'Gallery items retrieved successfully');
+      return $this->sendSuccess($response, 'Gallery items retrieved successfully');
     } catch (Exception $e) {
-      $code = $e->getCode() ?: 500;
-      $this->sendError($e->getMessage(), $code);
+      return $this->sendError($e->getMessage(), 500);
     }
   }
 
-  /**
-   * GET /api/gallery/{id}
-   * Get specific gallery item details
-   */
   public function show($id)
   {
     try {
-      if (!is_numeric($id) || $id < 1) {
+      // Validate ID
+      if (!is_numeric($id) || $id <= 0) {
         throw new Exception('Invalid gallery item ID', 400);
       }
 
-      $item = $this->galleryModel->getById((int)$id);
-
+      // Get gallery item detail
+      $item = $this->galleryModel->getById($id);
       if (!$item) {
-        throw new Exception('Gallery item not found', 404);
+        return $this->sendError("Gallery item not found", 404);
       }
 
-      $this->sendSuccess($item, 'Gallery item retrieved successfully');
+      // Get page header
+      $header = $this->galleryPageModel->getHeader();
+
+      // Prepare response
+      $response = [
+        'header' => $header,
+        'item' => $item
+      ];
+
+      return $this->sendSuccess($response, 'Gallery item detail retrieved successfully');
     } catch (Exception $e) {
-      $code = $e->getCode() ?: 500;
-      $this->sendError($e->getMessage(), $code);
+      return $this->sendError($e->getMessage(), 500);
     }
   }
 
@@ -84,7 +69,7 @@ class GalleryApiController extends ApiBaseController
   {
     try {
       $header = $this->galleryPageModel->getHeader();
-      return $this->sendSuccess($header, "Research header retrieved successfully");
+      return $this->sendSuccess($header, "Gallery page header retrieved successfully");
     } catch (Exception $e) {
       return $this->sendError($e->getMessage(), $e->getCode() ?: 500);
     }
