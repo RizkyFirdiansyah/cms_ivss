@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/BasePageModel.php';
 
-class GaleriPageModel extends BasePageModel
+class GalleryPageModel extends BasePageModel
 {
   public function __construct()
   {

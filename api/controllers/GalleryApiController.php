@@ -1,28 +1,21 @@
 <?php
 require_once __DIR__ . '/ApiBaseController.php';
 require_once __DIR__ . '/../../app/models/GalleryModel.php';
+require_once __DIR__ . '/../../app/models/GalleryPageModel.php';
 
-/**
- * GalleryApiController - REST API endpoints for gallery management (read-only)
- *
- * Endpoints:
- * - GET /api/gallery - List all gallery items
- * - GET /api/gallery?page=1&per_page=12 - Paginated gallery
- * - GET /api/gallery/{id} - Get gallery item detail
- */
 class GalleryApiController extends ApiBaseController
 {
   private $galleryModel;
+  private $galleryPageModel;
 
   public function __construct()
   {
     $this->galleryModel = new GalleryModel();
+    $this->galleryPageModel = new GalleryPageModel();
   }
 
-  /**
-   * GET /api/gallery
-   * List gallery items with pagination
-   */
+
+  // index
   public function index()
   {
     try {
@@ -84,6 +77,16 @@ class GalleryApiController extends ApiBaseController
     } catch (Exception $e) {
       $code = $e->getCode() ?: 500;
       $this->sendError($e->getMessage(), $code);
+    }
+  }
+
+  public function header()
+  {
+    try {
+      $header = $this->galleryPageModel->getHeader();
+      return $this->sendSuccess($header, "Research header retrieved successfully");
+    } catch (Exception $e) {
+      return $this->sendError($e->getMessage(), $e->getCode() ?: 500);
     }
   }
 }

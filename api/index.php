@@ -232,7 +232,10 @@ try {
             require_once __DIR__ . '/controllers/GalleryApiController.php';
             $controller = new GalleryApiController();
 
-            if ($resourceId) {
+            if ($resourceId === 'header') {
+                $controller->header();
+                break;
+            } elseif ($resourceId) {
                 $controller->show($resourceId);
             } else {
                 $controller->index();

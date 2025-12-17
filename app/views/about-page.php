@@ -182,7 +182,7 @@
                                   <label class="form-label">Gambar Kegiatan 1</label>
                                   <input type="file" name="activity_1_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
                                   <div class="form-text text-xs">Format: JPG, PNG, GIF, WebP (Maks. 2MB)</div>
-                                  <div class="mt-2" id="about-activity-1-image-preview">
+                                  <div class="mt-2" id="activity-1-image-preview">
                                     <!-- Activity 1 image preview -->
                                   </div>
                                 </div>
@@ -223,7 +223,7 @@
                                   <label class="form-label">Gambar Kegiatan 2</label>
                                   <input type="file" name="activity_2_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
                                   <div class="form-text text-xs">Format: JPG, PNG, GIF, WebP (Maks. 2MB)</div>
-                                  <div class="mt-2" id="about-activity-2-image-preview">
+                                  <div class="mt-2" id="activity-2-image-preview">
                                     <!-- Activity 2 image preview -->
                                   </div>
                                 </div>
@@ -264,7 +264,7 @@
                                   <label class="form-label">Gambar Kegiatan 3</label>
                                   <input type="file" name="activity_3_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
                                   <div class="form-text text-xs">Format: JPG, PNG, GIF, WebP (Maks. 2MB)</div>
-                                  <div class="mt-2" id="about-activity-3-image-preview">
+                                  <div class="mt-2" id="activity-3-image-preview">
                                     <!-- Activity 3 image preview -->
                                   </div>
                                 </div>
