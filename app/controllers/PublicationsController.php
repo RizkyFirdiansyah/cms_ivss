@@ -12,7 +12,13 @@ class PublicationsController extends BaseController
   {
     parent::__construct();
     parent::requireLogin();
-    parent::requireRoles(['kepala', 'dosen', 'mahasiswa']);
+    // Ubah pengecekan role
+    $allowedRoles = ['kepala', 'dosen', 'mahasiswa'];
+    if (!in_array($this->user['role'], $allowedRoles)) {
+      header('HTTP/1.0 403 Forbidden');
+      echo "Access denied";
+      exit;
+    }
 
     $this->publication = new PublicationsModel();
     $this->category = new CategoryModel();
@@ -26,23 +32,43 @@ class PublicationsController extends BaseController
     include '../app/views/publications.php';
   }
 
-  // Get All Publications
+  // Get All Publications dengan filter berdasarkan role user
   public function getList()
   {
     $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 6;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
+    
+    // Debug
+    error_log("=== DEBUG PUBLIKASI ===");
+    error_log("User ID: " . ($this->user['id'] ?? 'NULL'));
+    error_log("User Role: " . ($this->user['role'] ?? 'NULL'));
+    error_log("Is Admin: " . ($this->isAdmin() ? 'YES' : 'NO'));
+    
+    // Tentukan user_id berdasarkan role
+    $user_id = null;
+    if (!$this->isAdmin()) {
+      $user_id = $this->user['id']; // Filter hanya data user ini
+    }
+    
+    error_log("Filter User ID: " . ($user_id ?? 'NULL (show all for admin)'));
 
     $offset = ($page - 1) * $limit;
 
-    $data = $this->publication->getPublications($limit, $offset, $search, $category_id);
-    $total = $this->publication->countPublications($search, $category_id);
+    $data = $this->publication->getPublications($limit, $offset, $search, $category_id, $user_id);
+    $total = $this->publication->countPublications($search, $category_id, $user_id);
 
     $response_data = [
       'success' => true,
       'data' => $data,
       'total' => $total,
+      'is_admin' => $this->isAdmin(),
+      'debug_info' => [
+        'user_id' => $this->user['id'] ?? null,
+        'user_role' => $this->user['role'] ?? null,
+        'filter_applied' => $user_id !== null ? 'user_only' : 'all_users'
+      ]
     ];
 
     $this->jsonResponse($response_data);
@@ -109,7 +135,7 @@ class PublicationsController extends BaseController
     }
   }
 
-  // Update Publication
+  // Update Publication dengan validasi kepemilikan
   public function update()
   {
     try {
@@ -120,6 +146,17 @@ class PublicationsController extends BaseController
           "success" => false,
           "message" => "ID publikasi tidak valid."
         ], 400);
+      }
+
+      // Validasi kepemilikan untuk non-admin
+      if (!$this->isAdmin()) {
+        $publication = $this->publication->getById($id);
+        if (!$publication || $publication['user_id'] != $this->user['id']) {
+          return $this->jsonResponse([
+            "success" => false,
+            "message" => "Anda tidak memiliki izin untuk mengedit publikasi ini."
+          ], 403);
+        }
       }
 
       // Validasi categories
@@ -136,9 +173,6 @@ class PublicationsController extends BaseController
         $categoryIds = array_map('intval', $categoryIds);
         $categoryIds = array_filter($categoryIds);
       }
-
-      // Dapatkan data existing untuk referensi
-      $existing = $this->publication->getById($id);
 
       // Simpan data ke database
       $save = $this->publication->savePublication([
@@ -165,7 +199,7 @@ class PublicationsController extends BaseController
     }
   }
 
-  // Delete Publication
+  // Delete Publication dengan validasi kepemilikan
   public function delete()
   {
     try {
@@ -176,6 +210,17 @@ class PublicationsController extends BaseController
           "success" => false,
           "message" => "ID publikasi tidak valid."
         ], 400);
+      }
+
+      // Validasi kepemilikan untuk non-admin
+      if (!$this->isAdmin()) {
+        $publication = $this->publication->getById($id);
+        if (!$publication || $publication['user_id'] != $this->user['id']) {
+          return $this->jsonResponse([
+            "success" => false,
+            "message" => "Anda tidak memiliki izin untuk menghapus publikasi ini."
+          ], 403);
+        }
       }
 
       $del = $this->publication->delete($id);
@@ -194,7 +239,7 @@ class PublicationsController extends BaseController
     }
   }
 
-  // Get Single Publication by ID
+  // Get Single Publication by ID dengan validasi akses
   public function getDetail()
   {
     $id = $_GET['id'] ?? null;
@@ -215,9 +260,24 @@ class PublicationsController extends BaseController
       ], 404);
     }
 
+    // Validasi akses untuk non-admin
+    if (!$this->isAdmin() && $publication['user_id'] != $this->user['id']) {
+      return $this->jsonResponse([
+        "success" => false,
+        "message" => "Anda tidak memiliki akses ke publikasi ini."
+      ], 403);
+    }
+
     $this->jsonResponse([
       "success" => true,
       "data" => $publication
     ]);
+  }
+
+  // Helper method untuk mengecek apakah user adalah admin (kepala lab)
+  private function isAdmin()
+  {
+    // Karena database menggunakan single role string, bukan array
+    return isset($this->user['role']) && $this->user['role'] === 'kepala';
   }
 }

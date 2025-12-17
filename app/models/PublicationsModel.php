@@ -11,8 +11,8 @@ class PublicationsModel
     $this->conn = $db->getConnection();
   }
 
-  // Read Data Publications dengan Kategori 
-  public function getPublications($limit, $offset, $search = '', $category_id = null)
+  // Read Data Publications dengan Kategori dan filter user_id
+  public function getPublications($limit, $offset, $search = '', $category_id = null, $user_id = null)
   {
     $query = "SELECT DISTINCT p.*, u.name as author_name
               FROM publications p
@@ -22,6 +22,12 @@ class PublicationsModel
 
     $whereConditions = [];
     $params = [];
+
+    // Filter berdasarkan user_id (jika diberikan dan bukan null)
+    if ($user_id !== null) {
+      $whereConditions[] = "p.user_id = :user_id";
+      $params[':user_id'] = $user_id;
+    }
 
     // Filter search
     if ($search !== '') {
@@ -48,7 +54,11 @@ class PublicationsModel
 
       // Bind parameters
       foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        if ($key === ':user_id') {
+          $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        } else {
+          $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        }
       }
 
       $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
@@ -68,6 +78,60 @@ class PublicationsModel
     } catch (PDOException $e) {
       error_log("DB Error (getPublications): " . $e->getMessage());
       return [];
+    }
+  }
+
+  // Count Publications dengan filter user_id
+  public function countPublications($search = '', $category_id = null, $user_id = null)
+  {
+    $query = "SELECT COUNT(DISTINCT p.id) AS total 
+              FROM publications p
+              LEFT JOIN publication_categories pc ON p.id = pc.publication_id
+              LEFT JOIN categories c ON pc.category_id = c.id";
+
+    $whereConditions = [];
+    $params = [];
+
+    // Filter berdasarkan user_id (jika diberikan dan bukan null)
+    if ($user_id !== null) {
+      $whereConditions[] = "p.user_id = :user_id";
+      $params[':user_id'] = $user_id;
+    }
+
+    // Filter search
+    if ($search !== '') {
+      $whereConditions[] = "p.title ILIKE :search";
+      $params[':search'] = '%' . $search . '%';
+    }
+
+    // Filter kategori
+    if ($category_id !== null && $category_id > 0) {
+      $whereConditions[] = "pc.category_id = :category_id";
+      $params[':category_id'] = $category_id;
+    }
+
+    // Gabungkan kondisi WHERE
+    if (!empty($whereConditions)) {
+      $query .= " WHERE " . implode(" AND ", $whereConditions);
+    }
+
+    try {
+      $stmt = $this->conn->prepare($query);
+
+      // Bind parameters
+      foreach ($params as $key => $value) {
+        if ($key === ':user_id') {
+          $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        } else {
+          $stmt->bindValue($key, $value, PDO::PARAM_STR);
+        }
+      }
+
+      $stmt->execute();
+      return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    } catch (PDOException $e) {
+      error_log("DB Error (countPublications): " . $e->getMessage());
+      return 0;
     }
   }
 
@@ -105,50 +169,6 @@ class PublicationsModel
     } catch (PDOException $e) {
       error_log("DB Error (getPublicationCategoryIds): " . $e->getMessage());
       return [];
-    }
-  }
-
-  // Count Publications 
-  public function countPublications($search = '', $category_id = null)
-  {
-    $query = "SELECT COUNT(DISTINCT p.id) AS total 
-              FROM publications p
-              LEFT JOIN publication_categories pc ON p.id = pc.publication_id
-              LEFT JOIN categories c ON pc.category_id = c.id";
-
-    $whereConditions = [];
-    $params = [];
-
-    // Filter search
-    if ($search !== '') {
-      $whereConditions[] = "p.title ILIKE :search";
-      $params[':search'] = '%' . $search . '%';
-    }
-
-    // Filter kategori
-    if ($category_id !== null && $category_id > 0) {
-      $whereConditions[] = "pc.category_id = :category_id";
-      $params[':category_id'] = $category_id;
-    }
-
-    // Gabungkan kondisi WHERE
-    if (!empty($whereConditions)) {
-      $query .= " WHERE " . implode(" AND ", $whereConditions);
-    }
-
-    try {
-      $stmt = $this->conn->prepare($query);
-
-      // Bind parameters
-      foreach ($params as $key => $value) {
-        $stmt->bindValue($key, $value, PDO::PARAM_STR);
-      }
-
-      $stmt->execute();
-      return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    } catch (PDOException $e) {
-      error_log("DB Error (countPublications): " . $e->getMessage());
-      return 0;
     }
   }
 
