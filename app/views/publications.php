@@ -16,6 +16,11 @@
   <link id="pagestyle" href="/cms_ivss/public/assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+    .badge-category {
+      font-size: 0.65rem;
+    }
+  </style>
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -32,6 +37,11 @@
         <div class="card">
           <div class="card-header pb-0">
             <h5 class="m-0">Publikasi</h5>
+            <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+              <p class="text-sm text-success mb-0">Anda dapat melihat semua publikasi sebagai Admin Lab</p>
+            <?php else: ?>
+              <p class="text-sm text-info mb-0">Menampilkan hanya publikasi yang Anda buat</p>
+            <?php endif; ?>
           </div>
 
           <div class="card-body">
@@ -50,14 +60,9 @@
             </div>
             <div class="table-responsive">
               <table class="table align-items-center mb-0">
-                <thead>
+                <thead id="publicationTableHeader">
                   <tr>
-                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Judul Publikasi</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kategori</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Link</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Terakhir Diupdate</th>
-                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                    <!-- Header akan diisi oleh JavaScript berdasarkan role -->
                   </tr>
                 </thead>
                 <tbody id="publicationTableBody">
@@ -86,19 +91,19 @@
         <div class="modal-body">
           <div id="add-publication-alert"></div>
           <div class="mb-3">
-            <label class="form-label">Judul Publikasi</label>
+            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
             <input name="title" type="text" class="form-control" required>
           </div>
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Tahun Publikasi</label>
+                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
                 <input name="publication_year" type="number" class="form-control" min="1900" max="2030" value="<?= date('Y') ?>" required>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Link Publikasi</label>
+                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
                 <input name="link" type="url" class="form-control" placeholder="https://example.com" required>
               </div>
             </div>
@@ -108,6 +113,7 @@
             <select name="categories[]" class="form-control categories-select" multiple style="width: 100%;">
               <!-- Data diisi JavaScript -->
             </select>
+            <small class="text-muted">Pilih satu atau lebih kategori (opsional)</small>
           </div>
         </div>
         <div class="modal-footer">
@@ -130,19 +136,19 @@
         <div class="modal-body">
           <div id="edit-publication-alert"></div>
           <div class="mb-3">
-            <label class="form-label">Judul Publikasi</label>
+            <label class="form-label">Judul Publikasi <span class="text-danger">*</span></label>
             <input name="title" id="edit-title" type="text" class="form-control" required>
           </div>
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Tahun Publikasi</label>
+                <label class="form-label">Tahun Publikasi <span class="text-danger">*</span></label>
                 <input name="publication_year" id="edit-publication_year" type="number" class="form-control" min="1900" max="2030" required>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label">Link Publikasi</label>
+                <label class="form-label">Link Publikasi <span class="text-danger">*</span></label>
                 <input name="link" id="edit-link" type="url" class="form-control" placeholder="https://example.com" required>
               </div>
             </div>
@@ -152,6 +158,7 @@
             <select name="categories[]" id="edit-categories" class="form-control categories-select" multiple style="width: 100%;">
               <!-- Options akan diisi oleh JavaScript -->
             </select>
+            <small class="text-muted">Pilih satu atau lebih kategori (opsional)</small>
           </div>
         </div>
         <div class="modal-footer">
@@ -205,11 +212,12 @@
   <script>
     // Global variables
     const BASE_URL = "<?= BASE_URL ?>";
-    const DEFAULT_LIMIT = 5;
+    const DEFAULT_LIMIT = 10;
     let currentPage = 1;
     let currentSearch = '';
     let currentCategory = '';
     let globalCategories = [];
+    let currentUserIsAdmin = false;
 
     // Helper functions
     function showAlert(message, type = 'info') {
@@ -225,7 +233,7 @@
       modal.show();
       setTimeout(() => {
         modal.hide();
-      }, 1000);
+      }, 3000);
     }
 
     function showConfirm(message, callback) {
@@ -239,103 +247,44 @@
       modal.show();
     }
 
-    // Show edit publication - MENGGUNAKAN STYLE SAMA SEPERTI NEWS
-    window.showEditPublication = function(el) {
-      const $el = $(el);
-      const id = $el.data('id');
-      const title = $el.data('title');
-      const publication_year = $el.data('year');
-      const link = $el.data('link');
+    // Update table header berdasarkan role
+    function updateTableHeader(isAdmin) {
+      const header = $('#publicationTableHeader');
+      let headerHtml = '';
 
-      let selectedCategoryIds = [];
-      const categoryIdsData = $el.data('categories');
-
-      if (categoryIdsData) {
-        if (typeof categoryIdsData === 'string') {
-          selectedCategoryIds = JSON.parse(categoryIdsData);
-        } else if (Array.isArray(categoryIdsData)) {
-          selectedCategoryIds = categoryIdsData;
-        }
-        // Pastikan IDs adalah integer
-        selectedCategoryIds = selectedCategoryIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+      if (isAdmin) {
+        headerHtml = `
+          <tr>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Penulis</th>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Judul Publikasi</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kategori</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Link</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Terakhir Diupdate</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+          </tr>
+        `;
+      } else {
+        headerHtml = `
+          <tr>
+            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Judul Publikasi</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kategori</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Link</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Terakhir Diupdate</th>
+            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+          </tr>
+        `;
       }
 
-      // Isi input biasa
-      $('#edit-id').val(id);
-      $('#edit-title').val(title);
-      $('#edit-publication_year').val(publication_year);
-      $('#edit-link').val(link);
-
-      const $select = $('#edit-categories');
-
-      $('#modal-edit-publication').off('shown.bs.modal').on('shown.bs.modal', function() {
-
-        if ($select.hasClass('select2-hidden-accessible')) {
-          $select.select2('destroy');
-        }
-
-        $select.empty();
-
-        globalCategories.forEach(cat => {
-          const option = new Option(cat.name, cat.id, false, false);
-          $select.append(option);
-        });
-
-        $select.select2({
-          dropdownParent: $('#modal-edit-publication'),
-          placeholder: "Pilih kategori...",
-          allowClear: true,
-          tags: false
-        });
-
-        $select.val(selectedCategoryIds).trigger('change');
-      });
-
-      // Tampilkan modal
-      new bootstrap.Modal('#modal-edit-publication').show();
-    };
-
-    // Load category list untuk dropdown dan filter
-    function loadCategories() {
-      $.ajax({
-        url: BASE_URL + '/publikasi/categories',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          if (res.success && res.data) {
-            globalCategories = res.data;
-
-            // Initialize Select2 untuk form tambah
-            $('.categories-select').select2({
-              placeholder: 'Pilih kategori...',
-              allowClear: true,
-              data: globalCategories.map(c => ({
-                id: c.id,
-                text: c.name
-              })),
-              tags: false
-            });
-
-            // Isi dropdown filter kategori
-            const $categoryFilter = $('#categoryFilter');
-            $categoryFilter.empty().append('<option value="">Semua Kategori</option>');
-            globalCategories.forEach(cat => {
-              $categoryFilter.append(`<option value="${cat.id}">${cat.name}</option>`);
-            });
-          }
-        },
-        error: function(xhr) {
-          console.error('Error loading categories:', xhr);
-          showAlert('Gagal memuat daftar kategori', 'error');
-        }
-      });
+      header.html(headerHtml);
     }
 
-    // Render publication row - PERBAIKAN: Kirim categories sebagai JSON string
-    function renderPublicationRow(pub) {
+    // Render publication row
+    function renderPublicationRow(pub, isAdmin) {
       const categoriesHtml = pub.categories && pub.categories !== '' ?
         pub.categories.split(', ').map(cat =>
-          `<span class="badge bg-gradient-info text-white me-1 mb-1 px-2 py-1">${cat}</span>`
+          `<span class="badge bg-gradient-info text-white me-1 mb-1 px-2 py-1 badge-category">${cat}</span>`
         ).join('') :
         '<span class="text-muted">-</span>';
 
@@ -353,6 +302,50 @@
 
       const categoryIdsJson = JSON.stringify(categoryIds);
 
+      // Baris untuk admin (dengan kolom author)
+      if (isAdmin) {
+        return `
+          <tr>
+            <td class="text-center text-sm align-middle">
+              <span class="text-sm font-weight-bold">${pub.author_name || '-'}</span>
+            </td>
+            <td>
+              <div class="d-flex flex-column justify-content-center">
+                <h6 class="mb-0 text-sm">${pub.title}</h6>
+              </div>
+            </td>
+            <td class="text-center text-sm align-middle">${pub.publication_year}</td>
+            <td class="text-center align-middle">
+              <div class="d-flex flex-wrap justify-content-center">
+                ${categoriesHtml}
+              </div>
+            </td>
+            <td class="text-center align-middle">
+              <a href="${pub.link}" target="_blank" class="btn btn-sm bg-gradient-warning text-white px-3">
+                <i class="fa fa-external-link me-1"></i>Link
+              </a>
+            </td>
+            <td class="text-center text-sm align-middle">${lastUpdated}</td>
+            <td class="text-center">
+              <button class="btn mb-0 px-3 btn-warning btn-sm text-xs me-1" 
+                onclick="showEditPublication(this)"
+                data-id="${pub.id}"
+                data-title="${pub.title ? pub.title.replace(/"/g, '&quot;') : ''}"
+                data-link="${pub.link || ''}"
+                data-year="${pub.publication_year}"
+                data-categories='${categoryIdsJson}'>
+                <i class="fa fa-edit"></i>
+              </button>
+              <button class="btn mb-0 px-3 btn-danger btn-sm text-xs" 
+                onclick="deletePublication(${pub.id})">
+                <i class="fa fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+
+      // Baris untuk user biasa (tanpa kolom author)
       return `
         <tr>
           <td>
@@ -373,7 +366,7 @@
           </td>
           <td class="text-center text-sm align-middle">${lastUpdated}</td>
           <td class="text-center">
-            <button class="btn mb-0 px-3 btn-warning btn-sm text-xs" 
+            <button class="btn mb-0 px-3 btn-warning btn-sm text-xs me-1" 
               onclick="showEditPublication(this)"
               data-id="${pub.id}"
               data-title="${pub.title ? pub.title.replace(/"/g, '&quot;') : ''}"
@@ -389,6 +382,103 @@
           </td>
         </tr>
       `;
+    }
+
+    // Show edit publication
+    window.showEditPublication = function(el) {
+      const $el = $(el);
+      const id = $el.data('id');
+      const title = $el.data('title');
+      const publication_year = $el.data('year');
+      const link = $el.data('link');
+
+      let selectedCategoryIds = [];
+      const categoryIdsData = $el.data('categories');
+
+      if (categoryIdsData) {
+        if (typeof categoryIdsData === 'string') {
+          try {
+            selectedCategoryIds = JSON.parse(categoryIdsData);
+          } catch (e) {
+            console.error('Error parsing categories:', e);
+            selectedCategoryIds = [];
+          }
+        } else if (Array.isArray(categoryIdsData)) {
+          selectedCategoryIds = categoryIdsData;
+        }
+        // Pastikan IDs adalah integer
+        selectedCategoryIds = selectedCategoryIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+      }
+
+      // Isi input biasa
+      $('#edit-id').val(id);
+      $('#edit-title').val(title);
+      $('#edit-publication_year').val(publication_year);
+      $('#edit-link').val(link);
+
+      const $select = $('#edit-categories');
+
+      // Reset select2
+      if ($select.hasClass('select2-hidden-accessible')) {
+        $select.select2('destroy');
+      }
+
+      $select.empty();
+
+      globalCategories.forEach(cat => {
+        const option = new Option(cat.name, cat.id, false, false);
+        $select.append(option);
+      });
+
+      $select.select2({
+        dropdownParent: $('#modal-edit-publication'),
+        placeholder: "Pilih kategori...",
+        allowClear: true,
+        tags: false
+      });
+
+      $select.val(selectedCategoryIds).trigger('change');
+
+      // Tampilkan modal
+      const modal = new bootstrap.Modal(document.getElementById('modal-edit-publication'));
+      modal.show();
+    };
+
+    // Load category list untuk dropdown dan filter
+    function loadCategories() {
+      $.ajax({
+        url: BASE_URL + '/publikasi/categories',
+        method: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res.success && res.data) {
+            globalCategories = res.data;
+
+            // Initialize Select2 untuk form tambah
+            $('.categories-select').select2({
+              placeholder: 'Pilih kategori...',
+              allowClear: true,
+              data: globalCategories.map(c => ({
+                id: c.id,
+                text: c.name
+              })),
+              tags: false,
+              dropdownParent: $('#modal-add-publication')
+            });
+
+            // Isi dropdown filter kategori
+            const $categoryFilter = $('#categoryFilter');
+            $categoryFilter.empty().append('<option value="">Semua Kategori</option>');
+            globalCategories.forEach(cat => {
+              $categoryFilter.append(`<option value="${cat.id}">${cat.name}</option>`);
+            });
+          }
+        },
+        error: function(xhr) {
+          console.error('Error loading categories:', xhr);
+          showAlert('Gagal memuat daftar kategori', 'error');
+        }
+      });
     }
 
     // Load publications
@@ -415,40 +505,59 @@
         data: requestData,
         success: function(res) {
           tbody.empty();
+
+          // Cek apakah user adalah admin
+          currentUserIsAdmin = res.is_admin || false;
+
+          // Update header tabel berdasarkan role
+          updateTableHeader(currentUserIsAdmin);
+
           if (!res || !res.success || !res.data || res.data.length === 0) {
             let message = 'Tidak ada data publikasi.';
+            if (!currentUserIsAdmin) {
+              message = 'Belum ada publikasi yang Anda buat.';
+            }
             if (search) message += ` untuk pencarian "${search}"`;
             if (category) {
               const categoryName = $('#categoryFilter option:selected').text();
               message += ` dalam kategori "${categoryName}"`;
             }
-            tbody.append(`<tr><td colspan="6" class="text-center text-muted">${message}</td></tr>`);
+
+            const colSpan = currentUserIsAdmin ? 7 : 6;
+            tbody.append(`<tr><td colspan="${colSpan}" class="text-center text-muted py-4">${message}</td></tr>`);
             return;
           }
 
-          res.data.forEach(p => tbody.append(renderPublicationRow(p)));
+          // Render data
+          res.data.forEach(p => tbody.append(renderPublicationRow(p, currentUserIsAdmin)));
 
           const total = Number(res.total || 0);
           const totalPages = Math.max(1, Math.ceil(total / limit));
-          let html = '';
 
-          // Page numbers
-          const startPage = Math.max(1, page - 2);
-          const endPage = Math.min(totalPages, startPage + 4);
+          if (totalPages <= 1) {
+            pagination.html('<small class="text-muted">Menampilkan semua data</small>');
+          } else {
+            let html = '';
 
-          for (let i = startPage; i <= endPage; i++) {
-            const cls = (i === page) ? 'btn-primary' : 'btn-outline-primary';
-            html += `<button class="btn btn-sm px-3 ${cls} mx-1" onclick="loadPublications(${i}, '${encodeURIComponent(search)}', '${category}', ${limit})">${i}</button>`;
+            // Page numbers
+            const startPage = Math.max(1, page - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+              const cls = (i === page) ? 'btn-primary' : 'btn-outline-primary';
+              html += `<button class="btn btn-sm px-3 ${cls} mx-1" onclick="loadPublications(${i}, '${encodeURIComponent(search)}', '${category}', ${limit})">${i}</button>`;
+            }
+
+            pagination.html(html);
           }
 
-          pagination.html(html);
           currentPage = page;
           currentSearch = search;
           currentCategory = category;
         },
         error: function(xhr, status, err) {
           console.error('Error loading publications:', status, err);
-          tbody.html(`<tr><td colspan="6" class="text-center text-danger">Gagal memuat data.</td></tr>`);
+          tbody.html(`<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`);
         }
       });
     }
@@ -471,12 +580,14 @@
         data: $.param(formData),
         dataType: "json",
         success: function(res) {
-          showAlert(res.message, res.success ? "success" : "error");
           if (res.success) {
+            showAlert(res.message, "success");
             $("#modal-add-publication").modal("hide");
             $("#form-add-publication")[0].reset();
             $('.categories-select').val(null).trigger('change');
             loadPublications(currentPage, currentSearch, currentCategory);
+          } else {
+            showAlert(res.message, "error");
           }
         },
         error: function(xhr, status, error) {
@@ -503,10 +614,12 @@
         data: $.param(formData),
         dataType: "json",
         success: function(res) {
-          showAlert(res.message, res.success ? "success" : "error");
           if (res.success) {
+            showAlert(res.message, "success");
             $("#modal-edit-publication").modal("hide");
             loadPublications(currentPage, currentSearch, currentCategory);
+          } else {
+            showAlert(res.message, "error");
           }
         },
         error: function(xhr, status, error) {
@@ -548,7 +661,7 @@
       _searchTimeout = setTimeout(() => {
         currentSearch = q;
         loadPublications(1, q, currentCategory, DEFAULT_LIMIT);
-      }, 300);
+      }, 500);
     });
 
     // Category filter change
@@ -563,7 +676,7 @@
       // Load categories untuk dropdown dan filter
       loadCategories();
 
-      // initial load publikasi
+      // Initial load publikasi
       loadPublications(1, '', '', DEFAULT_LIMIT);
 
       // Reset form when modal is closed

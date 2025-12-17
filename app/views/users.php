@@ -308,7 +308,7 @@
   <script>
     // Global variables
     const BASE_URL = "<?= BASE_URL ?>";
-    const DEFAULT_LIMIT = 5;
+    const DEFAULT_LIMIT = 10;
     let currentPage = 1;
     let currentPendingPage = 1;
     let currentPendingId = null;
